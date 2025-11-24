@@ -12,7 +12,7 @@
 
 ---
 
-# 📝 **Deskripsi Aplikasi **
+# 📝 **Deskripsi Aplikasi**
 
 **Sporra** adalah aplikasi mobile yang kami bangun sebagai ruang berkumpulnya para penggemar olahraga.
 Di Sporra, siapa pun bisa mengikuti berita terkini, mencari event olahraga terdekat, berdiskusi di forum, hingga membuat aktivitas olahraga bersama.
@@ -180,5 +180,5 @@ Proses integrasi ini membuat alur aplikasi menjadi **mulus, real-time, dan aman*
 # 🔗 **Link APK & Desain**
 
 * **Link APK:** *(menyusul)*
-* **Link Figma:** *(tambahkan link di sini)*
+* **Link Figma:** *https://www.figma.com/design/kZpLlZVnWPINsl4yttEgwk/SPORRA?node-id=0-1&t=rX4dCHUFBjM6lUuC-1*
 
