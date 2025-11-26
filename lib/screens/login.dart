@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sporra_mobile/screens/main_scaffold.dart';
 import 'package:sporra_mobile/screens/menu.dart';
 
 // FILE PLACEHOLDER NANTI UBAH AJA
@@ -73,13 +74,13 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MyHomePage(),
+                          builder: (context) => const MainScaffold(),
                         ),
                       );
                       
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Login Berhasil (Mode Placeholder)"),
+                          content: Text("Login Berhasil"),
                         ),
                       );
                     },

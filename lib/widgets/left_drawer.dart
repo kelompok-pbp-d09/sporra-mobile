@@ -99,7 +99,7 @@ class LeftDrawer extends StatelessWidget {
                 // Logika Logout sesuai tutorial
                 // Ganti URL dengan URL aplikasi Django kamu
                 final response = await request.logout(
-                    "http://localhost:8000/auth/logout/"); // Sesuaikan port/I
+                    "https://afero-aqil-sporra.pbp.cs.ui.ac.id//auth/logout/"); // Sesuaikan port/I
                 
                 String message = response["message"];
                 if (context.mounted) {

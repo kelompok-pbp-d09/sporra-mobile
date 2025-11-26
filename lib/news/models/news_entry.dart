@@ -10,7 +10,7 @@ String newsEntryToJson(List<NewsEntry> data) => json.encode(List<dynamic>.from(d
 
 class NewsEntry {
     String model;
-    String pk; // Ini adalah ID (UUID) kamu
+    String pk;
     Fields fields;
 
     NewsEntry({
@@ -36,11 +36,11 @@ class Fields {
     String title;
     String content;
     String category;
-    String thumbnail; // Bisa null
+    String thumbnail;
     int newsViews;
     DateTime createdAt;
-    bool isFeatured;
-    int author;
+    bool isFeatured; // Kita anggap ini is_news_hot nanti
+    int? author;     // Ubah jadi nullable (int?) untuk jaga-jaga
 
     Fields({
         required this.title,
@@ -50,17 +50,24 @@ class Fields {
         required this.newsViews,
         required this.createdAt,
         required this.isFeatured,
-        required this.author,
+        this.author, // Hapus 'required'
     });
 
     factory Fields.fromJson(Map<String, dynamic> json) => Fields(
         title: json["title"],
         content: json["content"],
         category: json["category"],
+        // Handle jika thumbnail null
         thumbnail: json["thumbnail"] ?? "", 
         newsViews: json["news_views"],
         createdAt: DateTime.parse(json["created_at"]),
-        isFeatured: json["is_featured"],
+        
+        // PERBAIKAN UTAMA DI SINI:
+        // Gunakan '?? false' agar jika datanya tidak ada di JSON, defaultnya jadi false.
+        isFeatured: json["is_featured"] ?? false, 
+        
+        // PERBAIKAN KEDUA:
+        // Author bisa null di Django, jadi kita terima null juga di sini
         author: json["author"], 
     );
 
