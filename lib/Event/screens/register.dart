@@ -23,7 +23,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final request = context.watch<CookieRequest>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1F2937), // bg-gray-800
+      backgroundColor: const Color(0xFF1F2937),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F2937),
         elevation: 0,
@@ -36,7 +36,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E2130), // darker gray
+              color: const Color(0xFF1E2130),
               borderRadius: BorderRadius.circular(16),
               boxShadow: const [
                 BoxShadow(
@@ -61,7 +61,12 @@ class _RegisterPageState extends State<RegisterPage> {
 
                 const SizedBox(height: 28),
 
-                _buildInput("Username", _usernameController),
+                _buildInput(
+                  "Nama Pengguna",
+                  _usernameController,
+                  helper:
+                      "Wajib. 150 karakter atau sedikit. Hanya huruf, angka, dan @/./+/-/_.",
+                ),
                 const SizedBox(height: 14),
 
                 _buildInput("Full Name", _fullNameController),
@@ -70,12 +75,20 @@ class _RegisterPageState extends State<RegisterPage> {
                 _buildInput("Phone", _phoneController),
                 const SizedBox(height: 14),
 
-                _buildInput("Password", _password1Controller, isPassword: true),
+                _buildInput(
+                  "Sandi",
+                  _password1Controller,
+                  isPassword: true,
+                  helper:
+                      "Sandi anda tidak dapat terlalu mirip terhadap informasi pribadi anda. Kata sandi Anda harus memuat setidaknya 8 karakter. Sandi anda tidak dapat berupa sandi umum digunakan. Sandi anda tidak bisa sepenuhnya numerik.",
+                ),
                 const SizedBox(height: 14),
 
                 _buildInput(
-                  "Confirm Password",
+                  "Konfirmasi sandi",
                   _password2Controller,
+                  helper:
+                      "Masukkan sandi yang sama seperti sebelumnya, untuk verifikasi.",
                   isPassword: true,
                 ),
                 const SizedBox(height: 22),
@@ -89,15 +102,15 @@ class _RegisterPageState extends State<RegisterPage> {
                     String password1 = _password1Controller.text;
                     String password2 = _password2Controller.text;
 
-                    final response = await request.postJson(
-                      "http://127.0.0.1:8000/auth/register/",
-                      jsonEncode({
+                    final response = await request.post(
+                      "http://127.0.0.1:8000/profile_user/auth/register/",
+                      {
                         "username": username,
                         "full_name": fullName,
                         "phone": phone,
                         "password1": password1,
                         "password2": password2,
-                      }),
+                      },
                     );
 
                     if (!context.mounted) return;
@@ -169,6 +182,7 @@ class _RegisterPageState extends State<RegisterPage> {
     String label,
     TextEditingController controller, {
     bool isPassword = false,
+    String? helper,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,12 +199,14 @@ class _RegisterPageState extends State<RegisterPage> {
         TextField(
           controller: controller,
           obscureText: isPassword,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.black),
           decoration: InputDecoration(
             filled: true,
-            fillColor: const Color(0xFFF9FAFB), // input bg
+            fillColor: const Color(0xFFF9FAFB),
             hintText: label,
             hintStyle: const TextStyle(color: Colors.black45),
+            helperText: helper,
+            helperStyle: const TextStyle(color: Colors.grey, fontSize: 12),
             contentPadding: const EdgeInsets.all(14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
