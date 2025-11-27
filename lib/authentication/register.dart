@@ -123,7 +123,7 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
                                   String password2 = _password2Controller.text;
 
                                   final response = await request.post(
-                                    "http://127.0.0.1:8000/profile_user/auth/register/",
+                                    "http://localhost:8000/profile_user/auth/register/",
                                     {
                                       "username": username,
                                       "full_name": fullName,
