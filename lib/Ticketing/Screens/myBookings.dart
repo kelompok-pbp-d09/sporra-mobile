@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+<<<<<<< HEAD
 import '../models/BookingModel.dart'; 
+=======
+import '../models/bookingmodel.dart'; 
+>>>>>>> 4fcc5ca6ac04c7e55a20fd6141c6f951d4b31646
 
 class MyBookingsPage extends StatefulWidget {
   const MyBookingsPage({Key? key}) : super(key: key);
@@ -32,8 +36,12 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       // Endpoint sesuai urls.py: path('api/my-bookings/', ...)
       final response = await request.get('$baseUrl/ticketing/api/my-bookings/');
       
+<<<<<<< HEAD
       print("RESPONSE RAW: $response");
 
+=======
+      // Parsing menggunakan model BookingEntry yang baru
+>>>>>>> 4fcc5ca6ac04c7e55a20fd6141c6f951d4b31646
       final bookingEntry = BookingEntry.fromJson(response);
 
       setState(() {
@@ -61,6 +69,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         title: const Text("⭐ My Bookings"),
         backgroundColor: const Color(0xFF1F2937), // AppBar gelap (Gray-800)
         foregroundColor: Colors.white,
+<<<<<<< HEAD
         // --- TAMBAHAN: Tombol Refresh di AppBar ---
         actions: [
           IconButton(
@@ -70,6 +79,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
           )
         ],
         // ------------------------------------------
+=======
+>>>>>>> 4fcc5ca6ac04c7e55a20fd6141c6f951d4b31646
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -163,7 +174,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
             
             const SizedBox(height: 12),
             
+<<<<<<< HEAD
             // DETAILS: Date & Location
+=======
+            // DETAILS: Date & Location (Field baru dari model)
+>>>>>>> 4fcc5ca6ac04c7e55a20fd6141c6f951d4b31646
             _buildIconText(Icons.calendar_today, booking.date),
             const SizedBox(height: 6),
             _buildIconText(Icons.location_on, booking.location),
@@ -228,7 +243,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     children: [
                       const Text("Total Bayar", style: TextStyle(color: Colors.green, fontSize: 12)),
                       Text(
+<<<<<<< HEAD
                         "Rp ${booking.totalPrice}",
+=======
+                        "Rp ${booking.totalPrice}", // Int tidak perlu .toStringAsFixed()
+>>>>>>> 4fcc5ca6ac04c7e55a20fd6141c6f951d4b31646
                         style: const TextStyle(
                           color: Colors.greenAccent, 
                           fontWeight: FontWeight.bold, 
@@ -242,7 +261,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     children: [
                       const Text("Dipesan pada", style: TextStyle(color: Colors.grey, fontSize: 10)),
                       Text(
+<<<<<<< HEAD
                         booking.bookedAt,
+=======
+                        booking.bookedAt, // Field baru bookedAt
+>>>>>>> 4fcc5ca6ac04c7e55a20fd6141c6f951d4b31646
                         style: TextStyle(color: Colors.grey[400], fontSize: 12, fontStyle: FontStyle.italic),
                       ),
                     ],
