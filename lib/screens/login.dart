@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sporra_mobile/screens/main_scaffold.dart';
+import 'package:sporra_mobile/screens/menu.dart';
 
 // TODO: FILE PLACEHOLDER NANTI UBAH AJA
 
@@ -73,14 +73,12 @@ class _LoginPageState extends State<LoginPage> {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const MainScaffold(),
+                          builder: (context) => const MainMenu(),
                         ),
                       );
-                      
+
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Login Berhasil"),
-                        ),
+                        const SnackBar(content: Text("Login Berhasil")),
                       );
                     },
                     style: ElevatedButton.styleFrom(
