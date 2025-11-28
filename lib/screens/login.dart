@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/screens/main_scaffold.dart';
-import 'package:sporra_mobile/screens/menu.dart';
 
-// FILE PLACEHOLDER NANTI UBAH AJA
+// TODO: FILE PLACEHOLDER NANTI UBAH AJA
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

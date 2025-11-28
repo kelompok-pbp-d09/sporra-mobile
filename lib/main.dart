@@ -3,7 +3,6 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/screens/login.dart';
 import 'package:sporra_mobile/screens/main_scaffold.dart';
-import 'package:sporra_mobile/screens/menu.dart';
 
 void main() {
   runApp(const MyApp());

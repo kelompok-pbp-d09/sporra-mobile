@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sporra_mobile/screens/menu.dart';
 import 'package:sporra_mobile/news/screens/news_entry_list.dart';
 import 'package:sporra_mobile/screens/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:sporra_mobile/screens/main_scaffold.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -56,7 +56,7 @@ class LeftDrawer extends StatelessWidget {
               Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const MyHomePage(),
+                    builder: (context) => const MainScaffold(),
                   ));
             },
           ),
