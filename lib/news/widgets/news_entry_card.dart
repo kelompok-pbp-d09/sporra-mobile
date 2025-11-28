@@ -1,11 +1,15 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sporra_mobile/news/models/news_entry.dart';
+import 'package:sporra_mobile/news/screens/news_detail.dart';
 
 class NewsEntryCard extends StatelessWidget {
   final NewsEntry news;
-  final VoidCallback onTap;
-
-  const NewsEntryCard({super.key, required this.news, required this.onTap});
+  final VoidCallback? onTap; // Tambahkan kembali sebagai opsional
+  
+  const NewsEntryCard({super.key, required this.news, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -13,7 +17,16 @@ class NewsEntryCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8.0),
       decoration: const BoxDecoration(color: Color(0xFF1F2937)),
       child: InkWell(
-        onTap: onTap,
+        // --- NAVIGASI KE DETAIL PAGE ---
+        // Gunakan onTap dari parent jika ada, jika tidak pakai default navigasi
+        onTap: onTap ?? () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => NewsDetailPage(news: news),
+            ),
+          );
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -25,26 +38,20 @@ class NewsEntryCard extends StatelessWidget {
                   // --- AVATAR & AUTHOR CLICKABLE AREA ---
                   GestureDetector(
                     onTap: () {
-                      // TODO: Redirect ke halaman Profile Author
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(
-                            "Membuka profil: ${news.fields.author}",
-                          ),
+                          content: Text("Membuka profil: ${news.fields.author}"),
                         ),
                       );
                     },
                     child: Row(
                       children: [
-                        // Avatar Kecil
                         CircleAvatar(
                           radius: 12,
                           backgroundColor: Colors.blue[700],
-
                           backgroundImage: news.fields.authorPfp.isNotEmpty
                               ? NetworkImage(news.fields.authorPfp)
                               : null,
-
                           child: news.fields.authorPfp.isEmpty
                               ? Text(
                                   news.fields.author.isNotEmpty
@@ -57,7 +64,7 @@ class NewsEntryCard extends StatelessWidget {
                                 )
                               : null,
                         ),
-                        // Nama Author
+                        const SizedBox(width: 8),
                         Text(
                           news.fields.author,
                           style: const TextStyle(
@@ -77,7 +84,7 @@ class NewsEntryCard extends StatelessWidget {
               ),
             ),
 
-            // ---  JUDUL BERITA ---
+            // --- JUDUL BERITA ---
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
@@ -91,7 +98,7 @@ class NewsEntryCard extends StatelessWidget {
               ),
             ),
 
-            // --- GAMBAR / KONTEN---
+            // --- GAMBAR / KONTEN ---
             const SizedBox(height: 12),
             if (news.fields.thumbnail.isNotEmpty)
               Container(
@@ -130,10 +137,7 @@ class NewsEntryCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Text(
                         "${news.fields.newsViews}",
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(width: 8),
                       const Icon(
@@ -144,6 +148,11 @@ class NewsEntryCard extends StatelessWidget {
                     ],
                   ),
                   _buildActionPill(
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Fitur Komentar segera hadir!")),
+                      );
+                    },
                     children: [
                       const Icon(
                         Icons.mode_comment_outlined,
@@ -153,14 +162,22 @@ class NewsEntryCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       const Text(
                         "Comments",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
+                  
+                  // --- TOMBOL SHARE BERFUNGSI ---
                   _buildActionPill(
+                    onTap: () {
+                      Share.share(
+                        "Baca berita menarik di Sporra!\n\n"
+                        "${news.fields.title}\n"
+                        "Oleh: ${news.fields.author}\n\n"
+                        "https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/", // Ganti dengan deep link jika ada
+                        subject: news.fields.title,
+                      );
+                    },
                     children: [
                       const Icon(
                         Icons.share_outlined,
@@ -170,10 +187,7 @@ class NewsEntryCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       const Text(
                         "Share",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -186,16 +200,18 @@ class NewsEntryCard extends StatelessWidget {
     );
   }
 
-  // Widget Helper untuk membuat tombol "Pill" (Lonjong)
-  Widget _buildActionPill({required List<Widget> children}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.transparent,
-        border: Border.all(color: Colors.grey[800]!),
-        borderRadius: BorderRadius.circular(20),
+  Widget _buildActionPill({required List<Widget> children, VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          border: Border.all(color: Colors.grey[800]!),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(children: children),
       ),
-      child: Row(children: children),
     );
   }
 }
