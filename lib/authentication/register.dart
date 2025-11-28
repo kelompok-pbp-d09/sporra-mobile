@@ -20,207 +20,277 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  final Color _gray800 = const Color(0xFF1F2937);
-  final Color _gray300 = const Color(0xFFD1D5DB);
-  final Color _gray100 = const Color(0xFFF3F4F6);
-  final Color _blue600 = const Color(0xFF2563EB);
-  final Color _blue400 = const Color(0xFF60A5FA);
+  // --- PALET WARNA SPORRA (Sama dengan Login) ---
+  final Color _bgPrimary = const Color(0xFF111827); // Background Gelap Utama
+  final Color _bgCard = const Color(0xFF1F2937); // Background Card
+  final Color _inputFill = const Color(0xFF374151); // Warna Kolom Input
+  final Color _textPrimary = const Color(0xFFF9FAFB); // Putih
+  final Color _textSecondary = const Color(0xFF9CA3AF); // Abu-abu Teks
+  final Color _accentBlue = const Color(0xFF2563EB); // Biru Utama
 
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111827),
-      appBar: AppBar(
-        title: const Text("Register"),
-        backgroundColor: _gray800,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
+      backgroundColor: _bgPrimary,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Card(
-              color: _gray800,
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // --- HEADER ---
+              const Icon(
+                Icons.person_add_outlined,
+                size: 48,
+                color: Colors.white,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        "Create Account",
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 32),
+              const SizedBox(height: 16),
+              const Text(
+                "Create Account",
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Join Sporra community today",
+                style: TextStyle(color: _textSecondary, fontSize: 14),
+              ),
+              const SizedBox(height: 32),
 
-                      _buildInput(
-                        controller: _usernameController,
-                        label: "Nama Pengguna",
-                        helper:
-                            "Wajib. 150 karakter atau sedikit. Hanya huruf, angka, dan @/./+/-/_.",
-                      ),
-                      const SizedBox(height: 16),
+              // --- CARD ---
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Card(
+                  color: _bgCard,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    // ignore: deprecated_member_use
+                    side: BorderSide(color: Colors.white.withOpacity(0.05)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildInput(
+                            controller: _usernameController,
+                            label: "Username",
+                            helper:
+                                "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+                          ),
+                          const SizedBox(height: 16),
 
-                      _buildInput(
-                        controller: _fullNameController,
-                        label: "Full Name",
-                      ),
-                      const SizedBox(height: 16),
+                          _buildInput(
+                            controller: _fullNameController,
+                            label: "Full Name",
+                          ),
+                          const SizedBox(height: 16),
 
-                      _buildInput(
-                        controller: _phoneController,
-                        label: "Nomor HP",
-                        inputType: TextInputType.phone,
-                      ),
-                      const SizedBox(height: 16),
+                          _buildInput(
+                            controller: _phoneController,
+                            label: "Phone Number",
+                            inputType: TextInputType.phone,
+                          ),
+                          const SizedBox(height: 16),
 
-                      _buildInput(
-                        controller: _password1Controller,
-                        label: "Sandi",
-                        isPassword: true,
-                        helper:
-                            """Sandi anda tidak dapat terlalu mirip terhadap informasi pribadi anda.
-Kata sandi Anda harus memuat setidaknya 8 karakter.
-Sandi anda tidak dapat berupa sandi umum digunakan.
-Sandi anda tidak bisa sepenuhnya numerik.""",
-                      ),
-                      const SizedBox(height: 16),
+                          _buildInput(
+                            controller: _password1Controller,
+                            label: "Password",
+                            isPassword: true,
+                            helper:
+                                "Your password must contain at least 8 characters.",
+                          ),
+                          const SizedBox(height: 16),
 
-                      _buildInput(
-                        controller: _password2Controller,
-                        label: "Konfirmasi Sandi",
-                        isPassword: true,
-                        helper:
-                            "Masukkan sandi yang sama seperti sebelumnya, untuk verifikasi.",
-                      ),
-                      const SizedBox(height: 30),
+                          _buildInput(
+                            controller: _password2Controller,
+                            label: "Confirm Password",
+                            isPassword: true,
+                            helper:
+                                "Enter the same password as before, for verification.",
+                          ),
+                          const SizedBox(height: 32),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading
-                              ? null
-                              : () async {
-                                  setState(() => _isLoading = true);
-                                  String username = _usernameController.text;
-                                  String fullName = _fullNameController.text;
-                                  String phone = _phoneController.text;
-                                  String password1 = _password1Controller.text;
-                                  String password2 = _password2Controller.text;
+                          // --- REGISTER BUTTON ---
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _isLoading
+                                  ? null
+                                  : () async {
+                                      // Validasi Form Lokal
+                                      if (_password1Controller.text !=
+                                          _password2Controller.text) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              "Passwords do not match!",
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        return;
+                                      }
 
-                                  final response = await request.post(
-                                    "http://localhost:8000/profile_user/auth/register/",
-                                    {
-                                      "username": username,
-                                      "full_name": fullName,
-                                      "phone": phone,
-                                      "password1": password1,
-                                      "password2": password2,
+                                      setState(() => _isLoading = true);
+
+                                      String username =
+                                          _usernameController.text;
+                                      String fullName =
+                                          _fullNameController.text;
+                                      String phone = _phoneController.text;
+                                      String password1 =
+                                          _password1Controller.text;
+                                      String password2 =
+                                          _password2Controller.text;
+
+                                      try {
+                                        final response = await request.post(
+                                          "https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/auth/register/",
+                                          {
+                                            "username": username,
+                                            "full_name": fullName,
+                                            "phone": phone,
+                                            "password1": password1,
+                                            "password2": password2,
+                                          },
+                                        );
+
+                                        if (!context.mounted) return;
+
+                                        if (response["status"] == true) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                response["message"],
+                                              ),
+                                              backgroundColor: Colors.green,
+                                            ),
+                                          );
+                                          // Redirect ke Login setelah sukses
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => const LoginPage(),
+                                            ),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(
+                                              content: Text(
+                                                response["message"] ??
+                                                    "Registration failed",
+                                              ),
+                                              backgroundColor: Colors.red,
+                                            ),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text("Error: $e"),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() => _isLoading = false);
+                                        }
+                                      }
                                     },
-                                  );
-
-                                  setState(() => _isLoading = false);
-
-                                  if (!context.mounted) return;
-
-                                  if (response["status"] == true) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(response["message"]),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _accentBlue,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 4,
+                                disabledBackgroundColor: _accentBlue
+                                    // ignore: deprecated_member_use
+                                    .withOpacity(0.5),
+                              ),
+                              child: _isLoading
+                                  ? const SizedBox(
+                                      height: 20,
+                                      width: 20,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
                                       ),
-                                    );
-                                    Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const LoginPage(),
+                                    )
+                                  : const Text(
+                                      "Create Account",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                    );
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          response["message"].toString(),
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _blue600,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                                    ),
                             ),
                           ),
-                          child: _isLoading
-                              ? const CircularProgressIndicator(
-                                  color: Colors.white,
-                                )
-                              : const Text(
-                                  "Register",
+
+                          const SizedBox(height: 24),
+
+                          // --- LOGIN LINK ---
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Already have an account?",
+                                style: TextStyle(color: _textSecondary),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const LoginPage(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  "Login",
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    color: _accentBlue,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text(
-                            "Already have an account?",
-                            style: TextStyle(color: Colors.white70),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const LoginPage(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              "Login",
-                              style: TextStyle(
-                                color: _blue400,
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
       ),
     );
   }
 
+  // Helper Widget untuk Input Field
   Widget _buildInput({
     required TextEditingController controller,
     required String label,
@@ -234,40 +304,42 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
         Text(
           label,
           style: TextStyle(
-            color: _gray300,
+            color: _textSecondary,
             fontWeight: FontWeight.w500,
             fontSize: 14.0,
           ),
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 8),
         TextFormField(
           controller: controller,
           obscureText: isPassword,
           keyboardType: inputType,
-          style: const TextStyle(color: Colors.black87),
-
+          style: TextStyle(color: _textPrimary), // Warna teks input putih
           decoration: InputDecoration(
             filled: true,
-            fillColor: _gray100,
-
-            hintText: label,
-            hintStyle: TextStyle(color: Colors.grey[500]),
+            fillColor: _inputFill, // Warna latar gelap
+            hintText: "Enter your $label",
+            hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
 
             helperText: helper,
             helperMaxLines: 3,
-            helperStyle: const TextStyle(color: Colors.grey, fontSize: 12),
-            floatingLabelBehavior: FloatingLabelBehavior.never,
+            helperStyle: TextStyle(color: Colors.grey[600], fontSize: 11),
+
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16.0,
-              vertical: 12.0,
+              vertical: 14.0,
             ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(12.0),
               borderSide: BorderSide.none,
             ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: const BorderSide(color: Colors.transparent),
+            ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8.0),
-              borderSide: BorderSide(color: _blue600, width: 2.0),
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: BorderSide(color: _accentBlue, width: 2.0),
             ),
           ),
         ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sporra_mobile/news/models/news_entry.dart'; 
+import 'package:sporra_mobile/news/models/news_entry.dart';
 import 'package:sporra_mobile/news/widgets/news_entry_card.dart';
 import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -15,12 +15,13 @@ class NewsEntryListPage extends StatefulWidget {
 }
 
 class _NewsEntryListPageState extends State<NewsEntryListPage> {
-  
   Future<List<NewsEntry>> fetchNews(CookieRequest request) async {
-    final response = await request.get('https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/json/');
-    
+    final response = await request.get(
+      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/json/',
+    );
+
     var data = response;
-    
+
     List<NewsEntry> listNews = [];
     for (var d in data) {
       if (d != null) {
@@ -34,7 +35,6 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
-    // 1. Definisikan bodyContent (Isi Halaman) dalam variabel
     Widget bodyContent = FutureBuilder(
       future: fetchNews(request),
       builder: (context, AsyncSnapshot snapshot) {
@@ -50,29 +50,18 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
             );
           } else {
             return ListView.builder(
+              padding: const EdgeInsets.all(8), // Tambahkan padding biar rapi
               itemCount: snapshot.data!.length,
-              itemBuilder: (_, index) => NewsEntryCard(
-                news: snapshot.data![index],
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text("Kamu memilih: ${snapshot.data![index].fields.title}"),
-                    ),
-                  );
-                },
-              ),
+              itemBuilder: (_, index) =>
+                  NewsEntryCard(news: snapshot.data![index]),
             );
           }
         }
       },
     );
 
-    // 2. Logika Pengembalian (Return) berdasarkan isEmbedded
     if (widget.isEmbedded) {
-      return Container(
-        color: const Color(0xFF111827),
-        child: bodyContent,
-      );
+      return Container(color: const Color(0xFF111827), child: bodyContent);
     } else {
       return Scaffold(
         backgroundColor: const Color(0xFF111827),
