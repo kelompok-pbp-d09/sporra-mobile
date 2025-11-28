@@ -26,11 +26,10 @@ class NewsDetailPage extends StatelessWidget {
       backgroundColor: _bgPrimary,
       body: CustomScrollView(
         slivers: [
-          // 1. HEADER GAMBAR (SliverAppBar)
+          //  HEADER GAMBAR (SliverAppBar)
           _buildSliverAppBar(context),
 
-          // 2. KONTEN BERITA (SliverToBoxAdapter)
-          // Kita pisah ini agar tidak dirender ulang saat list komentar di-scroll/update
+          //  KONTEN BERITA (SliverToBoxAdapter)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),

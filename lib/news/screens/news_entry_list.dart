@@ -15,6 +15,20 @@ class NewsEntryListPage extends StatefulWidget {
 }
 
 class _NewsEntryListPageState extends State<NewsEntryListPage> {
+  // 1. State untuk menyimpan kategori yang sedang dipilih
+  String _selectedCategory = 'Semua';
+
+  // 2. Daftar Kategori sesuai model Django
+  // 'label': Teks yang muncul di UI, 'value': Nilai yang dicocokkan dengan data API
+  final List<Map<String, String>> _categories = [
+    {'label': 'Semua', 'value': 'Semua'},
+    {'label': 'Sepakbola', 'value': 'sepakbola'},
+    {'label': 'F1', 'value': 'f1'},
+    {'label': 'Moto GP', 'value': 'moto gp'},
+    {'label': 'Raket', 'value': 'raket'},
+    {'label': 'Lainnya', 'value': 'olahraga lain'},
+  ];
+
   Future<List<NewsEntry>> fetchNews(CookieRequest request) async {
     final response = await request.get(
       'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/json/',
@@ -35,40 +49,141 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
-    Widget bodyContent = FutureBuilder(
-      future: fetchNews(request),
-      builder: (context, AsyncSnapshot snapshot) {
-        if (snapshot.data == null) {
-          return const Center(child: CircularProgressIndicator());
-        } else {
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text(
-                'Belum ada data berita.',
-                style: TextStyle(color: Colors.grey),
-              ),
-            );
-          } else {
-            return ListView.builder(
-              padding: const EdgeInsets.all(8), // Tambahkan padding biar rapi
-              itemCount: snapshot.data!.length,
-              itemBuilder: (_, index) =>
-                  NewsEntryCard(news: snapshot.data![index]),
-            );
-          }
-        }
-      },
+    // Warna Tema
+    final Color accentBlue = const Color(0xFF2563EB);
+    final Color bgDark = const Color(0xFF111827);
+    final Color cardDark = const Color(0xFF1F2937);
+
+    Widget bodyContent = Column(
+      children: [
+        // --- BAGIAN FILTER KATEGORI (DI ATAS) ---
+        Container(
+          color: bgDark,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: _categories.map((category) {
+                final isSelected = _selectedCategory == category['value'];
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: ChoiceChip(
+                    label: Text(category['label']!),
+                    selected: isSelected,
+                    onSelected: (bool selected) {
+                      if (selected) {
+                        setState(() {
+                          _selectedCategory = category['value']!;
+                        });
+                      }
+                    },
+                    // Styling Chip agar sesuai tema Dark
+                    backgroundColor: cardDark,
+                    selectedColor: accentBlue,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.grey[400],
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: BorderSide(
+                        color: isSelected ? accentBlue : Colors.grey[800]!,
+                      ),
+                    ),
+                    showCheckmark:
+                        false, // Hilangkan centang default biar lebih bersih
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
+
+        // --- BAGIAN LIST BERITA ---
+        Expanded(
+          child: FutureBuilder(
+            future: fetchNews(request),
+            builder: (context, AsyncSnapshot snapshot) {
+              if (snapshot.data == null) {
+                return const Center(child: CircularProgressIndicator());
+              } else {
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child: Text(
+                      'Belum ada data berita.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  );
+                } else {
+                  // --- LOGIKA FILTERING ---
+                  List<NewsEntry> allNews = snapshot.data!;
+                  List<NewsEntry> filteredNews;
+
+                  if (_selectedCategory == 'Semua') {
+                    filteredNews = allNews;
+                  } else {
+                    // Filter berdasarkan field category dari Django
+                    filteredNews = allNews
+                        .where(
+                          (news) => news.fields.category == _selectedCategory,
+                        )
+                        .toList();
+                  }
+
+                  if (filteredNews.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.article_outlined,
+                            size: 60,
+                            color: Colors.grey[700],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Tidak ada berita di kategori ini.',
+                            style: TextStyle(color: Colors.grey[500]),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(
+                      8,
+                      0,
+                      8,
+                      80,
+                    ), // Padding bawah utk FAB
+                    itemCount: filteredNews.length,
+                    itemBuilder: (_, index) => NewsEntryCard(
+                      news: filteredNews[index],
+                      // Kita tidak perlu onTap di sini karena sudah di handle di dalam Card
+                    ),
+                  );
+                }
+              }
+            },
+          ),
+        ),
+      ],
     );
 
     if (widget.isEmbedded) {
-      return Container(color: const Color(0xFF111827), child: bodyContent);
+      return Container(color: bgDark, child: bodyContent);
     } else {
       return Scaffold(
-        backgroundColor: const Color(0xFF111827),
+        backgroundColor: bgDark,
         appBar: AppBar(
-          title: const Text('News List'),
-          backgroundColor: const Color(0xFF1F2937),
+          title: const Text('Sporra News'),
+          backgroundColor: cardDark,
           foregroundColor: Colors.white,
+          elevation: 0,
         ),
         drawer: const LeftDrawer(),
         body: bodyContent,

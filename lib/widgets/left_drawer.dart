@@ -47,10 +47,10 @@ class LeftDrawer extends StatelessWidget {
 
           // --- MENU ITEMS ---
 
-          // 1. Home
+          // News Feed
           ListTile(
-            leading: const Icon(Icons.home_outlined, color: Colors.white),
-            title: const Text('Home', style: TextStyle(color: Colors.white)),
+            leading: const Icon(Icons.newspaper, color: Colors.white),
+            title: const Text('News Feed', style: TextStyle(color: Colors.white)),
             onTap: () {
               Navigator.pushReplacement(
                 context,
@@ -59,24 +59,8 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
 
-          // 2. News List (Fitur Utama)
-          ListTile(
-            leading: const Icon(Icons.newspaper, color: Colors.white),
-            title: const Text(
-              'News List',
-              style: TextStyle(color: Colors.white),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NewsEntryListPage(),
-                ),
-              );
-            },
-          ),
 
-          // 3. Tickets (Placeholder)
+          // Tickets
           ListTile(
             leading: const Icon(
               Icons.confirmation_number_outlined,
