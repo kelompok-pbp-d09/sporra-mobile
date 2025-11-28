@@ -3,6 +3,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/main.dart';
 import 'package:sporra_mobile/authentication/register.dart';
+import 'package:sporra_mobile/screens/menu.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -137,8 +138,7 @@ class _LoginPageState extends State<LoginPage> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const MyHomePage(title: 'Sporra Mobile'),
+                                builder: (context) => const MainMenu(),
                               ),
                             );
                             ScaffoldMessenger.of(context)
