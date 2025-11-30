@@ -41,10 +41,10 @@ class _RegisterPageState extends State<RegisterPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // --- HEADER ---
-              const Icon(
-                Icons.person_add_outlined,
-                size: 48,
-                color: Colors.white,
+              Image.asset(
+                'assets/images/logotxt.png',
+                height: 200, // Adjust size
+                width: 200,
               ),
               const SizedBox(height: 16),
               const Text(
@@ -58,7 +58,7 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                "Join Sporra community today",
+                "Join the Sporra community today",
                 style: TextStyle(color: _textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 32),

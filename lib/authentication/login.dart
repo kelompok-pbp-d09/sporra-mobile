@@ -39,19 +39,18 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // --- LOGO / BRANDING ---
-              const Icon(Icons.sports_soccer, size: 64, color: Colors.white),
-              const SizedBox(height: 16),
-              const Text(
-                "SPORRA",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 2.0,
-                ),
+              // --- LOGO ---
+              Image.asset(
+                'assets/images/logotxt.png',
+                height: 200, // Adjust size
+                width: 200,
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
+
+              const Text(
+                'Login',
+                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+              ),
 
               // --- CARD LOGIN ---
               ConstrainedBox(
