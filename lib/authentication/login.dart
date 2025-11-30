@@ -15,12 +15,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  final Color _gray800 = const Color(0xFF1F2937);
-  final Color _gray300 = const Color(0xFFD1D5DB);
-  final Color _gray100 = const Color(0xFFF3F4F6);
-  final Color _blue600 = const Color(0xFF2563EB);
-  final Color _blue400 = const Color(0xFF60A5FA);
-
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
@@ -29,7 +23,7 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
         title: const Text('Login'),
-        backgroundColor: _gray800,
+        backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -40,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
             constraints: const BoxConstraints(maxWidth: 400),
             child: Card(
               elevation: 8,
-              color: _gray800,
+              color: const Color(0xFF1F2937),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
@@ -66,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: const TextStyle(color: Colors.black87),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: _gray100,
+                        fillColor: const Color(0xFFF3F4F6),
                         hintText: 'Enter your username',
                         hintStyle: TextStyle(color: Colors.grey[500]),
                         contentPadding: const EdgeInsets.symmetric(
@@ -97,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: const TextStyle(color: Colors.black87),
                       decoration: InputDecoration(
                         filled: true,
-                        fillColor: _gray100,
+                        fillColor: const Color(0xFFF3F4F6),
                         hintText: 'Enter your password',
                         hintStyle: TextStyle(color: Colors.grey[500]),
                         contentPadding: const EdgeInsets.symmetric(
@@ -126,7 +120,7 @@ class _LoginPageState extends State<LoginPage> {
                         String password = _passwordController.text;
 
                         final response = await request.login(
-                          "http://localhost:8000/profile_user/auth/login/",
+                          "http://127.0.0.1:8000/profile_user/auth/login/",
                           {'username': username, 'password': password},
                         );
 
@@ -170,7 +164,7 @@ class _LoginPageState extends State<LoginPage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _blue600,
+                        backgroundColor: const Color(0xFF2563EB),
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 50),
                         padding: const EdgeInsets.symmetric(vertical: 12.0),
@@ -210,7 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                             TextSpan(
                               text: "Register Now",
                               style: TextStyle(
-                                color: _blue400,
+                                color: const Color(0xFF60A5FA),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -234,7 +228,7 @@ class _LoginPageState extends State<LoginPage> {
       child: Text(
         label,
         style: TextStyle(
-          color: _gray300,
+          color: const Color(0xFFD1D5DB),
           fontWeight: FontWeight.w500,
           fontSize: 14.0,
         ),

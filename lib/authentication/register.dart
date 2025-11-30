@@ -20,12 +20,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
 
-  final Color _gray800 = const Color(0xFF1F2937);
-  final Color _gray300 = const Color(0xFFD1D5DB);
-  final Color _gray100 = const Color(0xFFF3F4F6);
-  final Color _blue600 = const Color(0xFF2563EB);
-  final Color _blue400 = const Color(0xFF60A5FA);
-
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
@@ -34,7 +28,7 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
         title: const Text("Register"),
-        backgroundColor: _gray800,
+        backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
@@ -45,7 +39,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
             child: Card(
-              color: _gray800,
+              color: const Color(0xFF1F2937),
               elevation: 4,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -123,7 +117,7 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
                                   String password2 = _password2Controller.text;
 
                                   final response = await request.post(
-                                    "http://localhost:8000/profile_user/auth/register/",
+                                    "http://127.0.0.1:8000/profile_user/auth/register/",
                                     {
                                       "username": username,
                                       "full_name": fullName,
@@ -161,7 +155,7 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _blue600,
+                            backgroundColor: const Color(0xFF2563EB),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -203,7 +197,7 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
                             child: Text(
                               "Login",
                               style: TextStyle(
-                                color: _blue400,
+                                color: const Color(0xFF60A5FA),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -234,7 +228,7 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
         Text(
           label,
           style: TextStyle(
-            color: _gray300,
+            color: const Color(0xFFD1D5DB),
             fontWeight: FontWeight.w500,
             fontSize: 14.0,
           ),
@@ -248,7 +242,7 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
 
           decoration: InputDecoration(
             filled: true,
-            fillColor: _gray100,
+            fillColor: const Color(0xFFF3F4F6),
 
             hintText: label,
             hintStyle: TextStyle(color: Colors.grey[500]),
@@ -267,7 +261,10 @@ Sandi anda tidak bisa sepenuhnya numerik.""",
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.0),
-              borderSide: BorderSide(color: _blue600, width: 2.0),
+              borderSide: BorderSide(
+                color: const Color(0xFF2563EB),
+                width: 2.0,
+              ),
             ),
           ),
         ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/authentication/login.dart';
+import 'package:sporra_mobile/Event/screens/event_form.dart';
+import 'package:sporra_mobile/event/screens/event_home.dart';
 
 void main() {
   runApp(const MyApp());
@@ -107,6 +109,28 @@ class _MyHomePageState extends State<MyHomePage> {
             Text(
               '$_counter',
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EventFormPage(),
+                  ),
+                );
+              },
+              child: const Text("Go to Event Form"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EventHomePage(),
+                  ),
+                );
+              },
+              child: const Text("Event home"),
             ),
           ],
         ),
