@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import '../models/BookingModel.dart'; 
+import '../models/BookingModel.dart';
 
 class MyBookingsPage extends StatefulWidget {
   const MyBookingsPage({Key? key}) : super(key: key);
@@ -11,8 +11,8 @@ class MyBookingsPage extends StatefulWidget {
 }
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
-  final String baseUrl = "http://localhost:8000"; 
-  
+  final String baseUrl = "http://localhost:8000";
+
   List<Booking> _bookings = [];
   bool _isLoading = true;
 
@@ -27,11 +27,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   Future<void> fetchBookings() async {
     final request = context.read<CookieRequest>();
     setState(() => _isLoading = true);
-    
+
     try {
       // Endpoint sesuai urls.py: path('api/my-bookings/', ...)
       final response = await request.get('$baseUrl/ticketing/api/my-bookings/');
-      
+
       print("RESPONSE RAW: $response");
 
       final bookingEntry = BookingEntry.fromJson(response);
@@ -43,9 +43,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     } catch (e) {
       print("Error fetching bookings: $e");
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal memuat data: $e")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Gagal memuat data: $e")));
     }
   }
 
@@ -64,13 +64,13 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         // --- TAMBAHAN: Tombol Refresh di AppBar ---
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh), 
+            icon: const Icon(Icons.refresh),
             onPressed: fetchBookings, // Memanggil fungsi fetch ulang
             tooltip: 'Refresh Data',
-          )
+          ),
         ],
       ),
-        // ------------------------------------------
+      // ------------------------------------------
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -94,7 +94,11 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.confirmation_number_outlined, size: 80, color: Colors.grey),
+          const Icon(
+            Icons.confirmation_number_outlined,
+            size: 80,
+            color: Colors.grey,
+          ),
           const SizedBox(height: 16),
           const Text(
             "Belum ada tiket yang dipesan.",
@@ -106,7 +110,10 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
               Navigator.pop(context); // Kembali ke halaman list tiket
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[800]),
-            child: const Text("Cari Tiket", style: TextStyle(color: Colors.white)),
+            child: const Text(
+              "Cari Tiket",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -148,7 +155,10 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue[900]?.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8),
@@ -160,15 +170,14 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                 ),
               ],
             ),
-            
-            const SizedBox(height: 12),
-            
-            // DETAILS: Date & Location
 
+            const SizedBox(height: 12),
+
+            // DETAILS: Date & Location
             _buildIconText(Icons.calendar_today, booking.date),
             const SizedBox(height: 6),
             _buildIconText(Icons.location_on, booking.location),
-            
+
             const SizedBox(height: 16),
             const Divider(color: Colors.grey, height: 1),
             const SizedBox(height: 16),
@@ -180,19 +189,29 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("Tipe Tiket", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const Text(
+                      "Tipe Tiket",
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: booking.ticketType.toLowerCase() == 'vip' 
-                            ? Colors.amber[900] 
+                        color: booking.ticketType.toLowerCase() == 'vip'
+                            ? Colors.amber[900]
                             : Colors.purple[900],
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
                         booking.ticketType.toUpperCase(),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
                       ),
                     ),
                   ],
@@ -200,11 +219,18 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text("Jumlah", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    const Text(
+                      "Jumlah",
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       "${booking.quantity}x",
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -227,14 +253,17 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text("Total Bayar", style: TextStyle(color: Colors.green, fontSize: 12)),
+                      const Text(
+                        "Total Bayar",
+                        style: TextStyle(color: Colors.green, fontSize: 12),
+                      ),
                       Text(
                         "Rp ${booking.totalPrice}",
 
                         style: const TextStyle(
-                          color: Colors.greenAccent, 
-                          fontWeight: FontWeight.bold, 
-                          fontSize: 18
+                          color: Colors.greenAccent,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
                         ),
                       ),
                     ],
@@ -242,13 +271,20 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      const Text("Dipesan pada", style: TextStyle(color: Colors.grey, fontSize: 10)),
+                      const Text(
+                        "Dipesan pada",
+                        style: TextStyle(color: Colors.grey, fontSize: 10),
+                      ),
                       Text(
                         booking.bookedAt,
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12, fontStyle: FontStyle.italic),
+                        style: TextStyle(
+                          color: Colors.grey[400],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ],
-                  )
+                  ),
                 ],
               ),
             ),
