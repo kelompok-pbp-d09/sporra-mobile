@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sporra_mobile/news/screens/news_entry_list.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -38,11 +37,11 @@ class _LeftDrawerState extends State<LeftDrawer> {
                   width: 150,
                   fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 10),
+                // const SizedBox(height: 5),
                 const Text(
                   "Your ultimate sports companion",
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                  style: TextStyle(fontSize: 15, color: Colors.grey),
                 ),
               ],
             ),
@@ -52,17 +51,6 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
           // --- MENU ITEMS ---
 
-          // 1. Home
-          ListTile(
-            leading: const Icon(Icons.home_outlined, color: Colors.white),
-            title: const Text('Home', style: TextStyle(color: Colors.white)),
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const MainMenu()),
-              );
-            },
-          ),
 
           // 2. News List
           ListTile(
