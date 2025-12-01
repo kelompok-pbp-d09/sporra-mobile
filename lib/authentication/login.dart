@@ -132,7 +132,7 @@ class _LoginPageState extends State<LoginPage> {
                             }
 
                             final response = await request.login(
-                              "https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/auth/login/",
+                              "http://localhost:8000/profile_user/auth/login/",
                               {'username': username, 'password': password},
                             );
 

@@ -105,7 +105,7 @@ class NewsEntryCard extends StatelessWidget {
                 constraints: const BoxConstraints(maxHeight: 500),
                 width: double.infinity,
                 child: Image.network(
-                  'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                  'http://localhost:8000/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
                   fit: BoxFit.cover,
                   loadingBuilder: (context, child, loadingProgress) {
                     if (loadingProgress == null) return child;
@@ -162,7 +162,7 @@ class NewsEntryCard extends StatelessWidget {
                         "Baca berita menarik di Sporra!\n\n"
                         "${news.fields.title}\n"
                         "Oleh: ${news.fields.author}\n\n"
-                        "https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/", // Ganti dengan deep link jika ada
+                        "http://localhost:8000/news/", // Ganti dengan deep link jika ada
                         subject: news.fields.title,
                       );
                     },
