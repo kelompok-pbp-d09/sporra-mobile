@@ -54,13 +54,13 @@ class Event {
   });
 
   factory Event.fromJson(Map<String, dynamic> json) => Event(
-    id: json["id"],
-    judul: json["judul"],
-    lokasi: json["lokasi"],
-    kategori: json["kategori"],
-    kategoriDisplay: json["kategori_display"],
-    dateFormatted: json["date_formatted"],
-    detailUrl: json["detail_url"],
+    id: json["id"]?.toString() ?? "",
+    judul: json["judul"] ?? "Tanpa Judul",
+    lokasi: json["lokasi"] ?? "-",
+    kategori: json["kategori"] ?? "",
+    kategoriDisplay: json["kategori_display"] ?? "",
+    dateFormatted: json["date_formatted"] ?? "",
+    detailUrl: json["detail_url"] ?? "",
     userId: json["user_id"],
     deskripsi: json["deskripsi"] ?? "Tidak ada deskripsi",
     username: json["username"],

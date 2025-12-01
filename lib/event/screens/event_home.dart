@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:sporra_mobile/Event/screens/event_detail.dart';
-import 'package:sporra_mobile/Event/screens/event_form.dart';
-import 'package:sporra_mobile/Event/widgets/event_card.dart';
 import 'package:sporra_mobile/event/models/event_entry.dart';
 import 'package:sporra_mobile/event/widgets/event_card.dart';
-import 'package:sporra_mobile/event/screens/event_form.dart' hide EventFormPage;
-import 'package:sporra_mobile/event/screens/event_detail.dart' hide EventDetailPage;
+import 'package:sporra_mobile/event/screens/event_form.dart';
+import 'package:sporra_mobile/event/screens/event_detail.dart';
 
 class EventHomePage extends StatefulWidget {
   const EventHomePage({super.key});
