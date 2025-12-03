@@ -108,7 +108,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
               ),
               onTap: () async {
                 final response = await request.logout(
-                  "http://localhost:8000/auth/logout/",
+                  "http://localhost:8000/profile_user/auth/logout/",
                 );
 
                 String message = response["message"];
