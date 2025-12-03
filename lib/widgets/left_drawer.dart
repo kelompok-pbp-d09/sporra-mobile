@@ -3,6 +3,7 @@ import 'package:sporra_mobile/authentication/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/screens/menu.dart';
+import 'package:sporra_mobile/event/screens/event_home.dart';
 
 class LeftDrawer extends StatefulWidget {
   const LeftDrawer({super.key});
@@ -51,7 +52,6 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
           // --- MENU ITEMS ---
 
-
           // 2. News List
           ListTile(
             leading: const Icon(Icons.newspaper, color: Colors.white),
@@ -62,9 +62,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const MainMenu(),
-                ),
+                MaterialPageRoute(builder: (context) => const MainMenu()),
               );
             },
           ),
@@ -75,15 +73,11 @@ class _LeftDrawerState extends State<LeftDrawer> {
               Icons.calendar_month_outlined,
               color: Colors.white,
             ),
-            title: const Text(
-              'Events',
-              style: TextStyle(color: Colors.white),
-            ),
+            title: const Text('Events', style: TextStyle(color: Colors.white)),
             onTap: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Fitur Events segera hadir!")),
-                //TODO: add redirect ke event
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EventHomePage()),
               );
             },
           ),
@@ -92,10 +86,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
               Icons.confirmation_number_outlined,
               color: Colors.white,
             ),
-            title: const Text(
-              'Tickets',
-              style: TextStyle(color: Colors.white),
-            ),
+            title: const Text('Tickets', style: TextStyle(color: Colors.white)),
             onTap: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
