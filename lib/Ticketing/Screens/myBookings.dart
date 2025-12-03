@@ -11,7 +11,7 @@ class MyBookingsPage extends StatefulWidget {
 }
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
-  final String baseUrl = "http://localhost:8000";
+  final String baseUrl = "http://127.0.0.1:8000";
 
   List<Booking> _bookings = [];
   bool _isLoading = true;
