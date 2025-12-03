@@ -51,7 +51,6 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
           // --- MENU ITEMS ---
 
-
           // 2. News List
           ListTile(
             leading: const Icon(Icons.newspaper, color: Colors.white),
@@ -62,9 +61,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const MainMenu(),
-                ),
+                MaterialPageRoute(builder: (context) => const MainMenu()),
               );
             },
           ),
@@ -75,10 +72,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
               Icons.calendar_month_outlined,
               color: Colors.white,
             ),
-            title: const Text(
-              'Events',
-              style: TextStyle(color: Colors.white),
-            ),
+            title: const Text('Events', style: TextStyle(color: Colors.white)),
             onTap: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -92,10 +86,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
               Icons.confirmation_number_outlined,
               color: Colors.white,
             ),
-            title: const Text(
-              'Tickets',
-              style: TextStyle(color: Colors.white),
-            ),
+            title: const Text('Tickets', style: TextStyle(color: Colors.white)),
             onTap: () {
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
@@ -117,7 +108,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
               ),
               onTap: () async {
                 final response = await request.logout(
-                  "http://localhost:8000/auth/logout/",
+                  "http://localhost:8000/profile_user/auth/logout/",
                 );
 
                 String message = response["message"];
