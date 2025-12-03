@@ -3,6 +3,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/screens/menu.dart';
 import 'package:sporra_mobile/authentication/register.dart';
+import 'package:sporra_mobile/authentication/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,16 +17,12 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   // --- PALET WARNA SPORRA ---
-  final Color _bgPrimary = const Color(0xFF111827); // Background Gelap Utama
-  final Color _bgCard = const Color(0xFF1F2937); // Background Card
-  final Color _inputFill = const Color(
-    0xFF374151,
-  ); // Warna Kolom Input (Gray 700)
-  final Color _textPrimary = const Color(0xFFF9FAFB); // Putih (Gray 50)
-  final Color _textSecondary = const Color(
-    0xFF9CA3AF,
-  ); // Abu-abu Teks (Gray 400)
-  final Color _accentBlue = const Color(0xFF2563EB); // Biru Utama
+  final Color _bgPrimary = const Color(0xFF111827);
+  final Color _bgCard = const Color(0xFF1F2937);
+  final Color _inputFill = const Color(0xFF374151);
+  final Color _textPrimary = const Color(0xFFF9FAFB);
+  final Color _textSecondary = const Color(0xFF9CA3AF);
+  final Color _accentBlue = const Color(0xFF2563EB);
 
   @override
   Widget build(BuildContext context) {
@@ -39,20 +36,18 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // --- LOGO ---
+              // Logo
               Image.asset(
                 'assets/images/logotxt.png',
-                height: 200, // Adjust size
+                height: 200,
                 width: 200,
               ),
               const SizedBox(height: 20),
-
               const Text(
                 'Login',
-                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
               ),
 
-              // --- CARD LOGIN ---
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
                 child: Card(
@@ -60,7 +55,6 @@ class _LoginPageState extends State<LoginPage> {
                   color: _bgCard,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16.0),
-                    // ignore: deprecated_member_use
                     side: BorderSide(color: Colors.white.withOpacity(0.05)),
                   ),
                   child: Padding(
@@ -79,19 +73,9 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Please sign in to continue.',
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              color: _textSecondary,
-                            ),
-                          ),
-                        ),
                         const SizedBox(height: 32.0),
 
-                        // USERNAME INPUT
+                        // Username Input
                         _buildInputLabel("Username"),
                         const SizedBox(height: 8.0),
                         TextField(
@@ -102,7 +86,7 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 20.0),
 
-                        // PASSWORD INPUT
+                        // Password Input
                         _buildInputLabel("Password"),
                         const SizedBox(height: 8.0),
                         TextField(
@@ -114,20 +98,16 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 32.0),
 
-                        // LOGIN BUTTON
+                        // Login Button
                         ElevatedButton(
                           onPressed: () async {
                             String username = _usernameController.text;
                             String password = _passwordController.text;
 
                             if (username.isEmpty || password.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "Username and password cannot be empty",
-                                  ),
-                                ),
-                              );
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text("Username and password cannot be empty"),
+                              ));
                               return;
                             }
 
@@ -139,40 +119,40 @@ class _LoginPageState extends State<LoginPage> {
                             if (request.loggedIn) {
                               String message = response['message'];
                               String uname = response['username'];
+                              
+                              bool isSuperuser = response['is_superuser'] == true;
+                              bool isStaff = response['is_staff'] == true;
+                              bool isAdmin = isSuperuser || isStaff;
+                              
+                              // TAMBAHAN: Ambil URL foto profil dari response
+                              // Sesuaikan key dengan JSON dari Django ('profile_picture' atau 'pfp')
+                              String pfp = response['profile_picture'] ?? response['pfp'] ?? "";
+
                               if (context.mounted) {
+                                // Update Provider dengan data lengkap
+                                context.read<UserProvider>().setUser(
+                                  uname, 
+                                  isAdmin: isAdmin,
+                                  profilePicture: pfp // Kirim ke provider
+                                );
+
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MainMenu(),
-                                  ),
+                                  MaterialPageRoute(builder: (context) => const MainMenu()),
                                 );
-                                ScaffoldMessenger.of(context)
-                                  ..hideCurrentSnackBar()
-                                  ..showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "$message Welcome, $uname.",
-                                      ),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
+                                
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                  content: Text("$message Welcome, $uname (Admin: $isAdmin)"),
+                                  backgroundColor: Colors.green,
+                                ));
                               }
                             } else {
                               if (context.mounted) {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    backgroundColor: _bgCard,
-                                    title: const Text(
-                                      'Login Failed',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    content: Text(
-                                      response['message'],
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                      ),
-                                    ),
+                                    title: const Text('Login Failed'),
+                                    content: Text(response['message']),
                                     actions: [
                                       TextButton(
                                         child: const Text('OK'),
@@ -191,48 +171,30 @@ class _LoginPageState extends State<LoginPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12.0),
                             ),
-                            elevation: 4,
-                            // ignore: deprecated_member_use
-                            shadowColor: _accentBlue.withOpacity(0.5),
                           ),
-                          child: const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
-
-                        const SizedBox(height: 24.0),
-
-                        // --- REGISTER LINK (Tombol Register) ---
-                        Row(
+                        
+                         // ... Register Link code ...
+                         const SizedBox(height: 24),
+                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              "Don't have an account?",
-                              style: TextStyle(color: _textSecondary),
-                            ),
-                            TextButton(
-                              onPressed: () {
+                            Text("Don't have an account? ", style: TextStyle(color: _textSecondary)),
+                            GestureDetector(
+                              onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const RegisterPage(),
-                                  ),
+                                  MaterialPageRoute(builder: (context) => const RegisterPage()),
                                 );
                               },
                               child: Text(
                                 "Register",
-                                style: TextStyle(
-                                  color: _accentBlue,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: TextStyle(color: _accentBlue, fontWeight: FontWeight.bold),
                               ),
-                            ),
+                            )
                           ],
-                        ),
+                         )
                       ],
                     ),
                   ),
@@ -265,21 +227,10 @@ class _LoginPageState extends State<LoginPage> {
       fillColor: _inputFill,
       hintText: hint,
       hintStyle: TextStyle(color: Colors.grey[500]),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 14.0,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
         borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: const BorderSide(color: Colors.transparent),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12.0),
-        borderSide: BorderSide(color: _accentBlue, width: 2.0),
       ),
     );
   }

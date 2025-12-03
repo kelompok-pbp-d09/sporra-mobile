@@ -183,7 +183,7 @@ class NewsDetailPage extends StatelessWidget {
     */
     
     // Return empty sliver for now to satisfy type check
-    return const SliverToBoxAdapter(child: SizedBox.shrink());
+    // return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 
   Widget _buildCategoryPill() {

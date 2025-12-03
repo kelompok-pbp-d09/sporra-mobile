@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/news/screens/news_entry_list.dart';
+import 'package:sporra_mobile/news/screens/news_form.dart';
 import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/widgets/profile_avatar.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -55,7 +56,9 @@ class _MainMenuState extends State<MainMenu> {
           _titles[_selectedIndex],
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        actions: const [ProfileAvatarButton()],
+        actions: [
+          const ProfileAvatarButton(), // Pindahkan const ke sini (opsional) atau hapus saja
+        ],
       ),
 
       drawer: const LeftDrawer(),
@@ -65,19 +68,9 @@ class _MainMenuState extends State<MainMenu> {
       floatingActionButton: (_selectedIndex == 0 && request.loggedIn)
           ? FloatingActionButton(
               onPressed: () {
-                // TODO: Ganti dengan Navigasi ke Form News yang asli
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => const NewsFormPage()),
-                // );
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "Fitur Tambah Berita (Hanya untuk User Login)",
-                    ),
-                    backgroundColor: Colors.blueAccent,
-                  ),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const NewsFormPage()),
                 );
               },
               backgroundColor: Colors.blue[700],
