@@ -113,7 +113,7 @@ class NewsDetailPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
             Share.share(
-              "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
+              "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttp://localhost:8000/news/",
               subject: news.fields.title,
             );
         },
@@ -274,7 +274,7 @@ class NewsDetailPage extends StatelessWidget {
           children: [
             news.fields.thumbnail.isNotEmpty
                 ? Image.network(
-                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                    'http://localhost:8000/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[900],

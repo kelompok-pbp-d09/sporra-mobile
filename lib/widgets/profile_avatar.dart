@@ -9,7 +9,6 @@ import 'package:sporra_mobile/authentication/user_provider.dart';
 class ProfileAvatarButton extends StatelessWidget {
   const ProfileAvatarButton({super.key});
 
-  // Warna sesuai tema Sporra
   final Color _accentBlue = const Color(0xFF2563EB);
 
   @override
@@ -32,12 +31,12 @@ class ProfileAvatarButton extends StatelessWidget {
         padding: const EdgeInsets.only(right: 16.0),
         child: GestureDetector(
           onTap: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Logged in as $username"),
-                duration: const Duration(seconds: 1),
-                backgroundColor: _accentBlue,
+            // --- JAUH LEBIH SEDERHANA ---
+            // Cukup push ke ProfilePage, biarkan halaman itu loading sendiri
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProfilePage(isOwnProfile: true),
               ),
             );
           },
@@ -52,17 +51,13 @@ class ProfileAvatarButton extends StatelessWidget {
             child: (pfpUrl.isEmpty)
                 ? Text(
                     username.isNotEmpty ? username[0].toUpperCase() : "U",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   )
                 : null,
           ),
         ),
       );
     } else {
-      // --- JIKA BELUM LOGIN ---
       return Padding(
         padding: const EdgeInsets.only(right: 12.0),
         child: ElevatedButton(

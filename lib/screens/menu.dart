@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/news/screens/news_entry_list.dart';
 import 'package:sporra_mobile/news/screens/news_form.dart';
+import 'package:sporra_mobile/event/screens/event_home.dart';
 import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/widgets/profile_avatar.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
@@ -42,7 +43,6 @@ class _MainMenuState extends State<MainMenu> {
 
   @override
   Widget build(BuildContext context) {
-
     final request = context.watch<CookieRequest>();
 
     return Scaffold(
