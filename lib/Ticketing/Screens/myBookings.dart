@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import '../models/BookingModel.dart';
+import 'package:sporra_mobile/authentication/login.dart';
+
 
 class MyBookingsPage extends StatefulWidget {
   const MyBookingsPage({Key? key}) : super(key: key);
@@ -16,13 +18,31 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   List<Booking> _bookings = [];
   bool _isLoading = true;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      fetchBookings();
-    });
-  }
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    final request = context.read<CookieRequest>();
+
+    if (!request.loggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Silakan login untuk melihat daftar booking event kamu!."),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+      return;
+    }
+
+    fetchBookings();
+  });
+}
+
 
   Future<void> fetchBookings() async {
     final request = context.read<CookieRequest>();

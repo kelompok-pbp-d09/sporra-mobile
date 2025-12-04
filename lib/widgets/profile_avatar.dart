@@ -3,7 +3,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 import 'package:sporra_mobile/authentication/user_provider.dart';
-
+import 'package:sporra_mobile/profile_user/screens/profile_page.dart';
 //TODO FIX Avatar not showing
 
 class ProfileAvatarButton extends StatelessWidget {

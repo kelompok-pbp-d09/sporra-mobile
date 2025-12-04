@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sporra_mobile/Ticketing/Screens/Tickets.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -89,11 +90,10 @@ class _LeftDrawerState extends State<LeftDrawer> {
             ),
             title: const Text('Tickets', style: TextStyle(color: Colors.white)),
             onTap: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Fitur Tiket segera hadir!")),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AllTicketsPage()),
               );
-              //TODO: add redirect ke ticket
             },
           ),
 
