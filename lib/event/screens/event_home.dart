@@ -5,6 +5,7 @@ import 'package:sporra_mobile/event/models/event_entry.dart';
 import 'package:sporra_mobile/event/widgets/event_card.dart';
 import 'package:sporra_mobile/event/screens/event_form.dart';
 import 'package:sporra_mobile/event/screens/event_detail.dart';
+import 'package:sporra_mobile/widgets/left_drawer.dart';
 
 class EventHomePage extends StatefulWidget {
   const EventHomePage({super.key});
@@ -386,7 +387,9 @@ class _EventHomePageState extends State<EventHomePage> {
       appBar: AppBar(
         title: const Text('Event Home'),
         backgroundColor: const Color(0xFF1F2937),
+        foregroundColor: Colors.white,
       ),
+      drawer: const LeftDrawer(),
       body: isLoading
           ? const Center(
               child: Column(
@@ -427,6 +430,7 @@ class _EventHomePageState extends State<EventHomePage> {
                         textStyle: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),

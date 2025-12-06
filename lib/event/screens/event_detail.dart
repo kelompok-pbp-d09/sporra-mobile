@@ -243,6 +243,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),

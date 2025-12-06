@@ -31,7 +31,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
 
   Future<List<NewsEntry>> fetchNews(CookieRequest request) async {
     final response = await request.get(
-      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/json/',
+      'http://localhost:8000/news/json/',
     );
 
     var data = response;

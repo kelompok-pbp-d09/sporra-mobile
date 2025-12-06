@@ -1,42 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:sporra_mobile/news/screens/news_entry_list.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/screens/menu.dart';
+import 'package:sporra_mobile/event/screens/event_home.dart';
 
-class LeftDrawer extends StatelessWidget {
+class LeftDrawer extends StatefulWidget {
   const LeftDrawer({super.key});
 
+  @override
+  State<LeftDrawer> createState() => _LeftDrawerState();
+}
+
+class _LeftDrawerState extends State<LeftDrawer> {
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
     return Drawer(
-      // Mengatur warna background Drawer agar gelap (sesuai tema)
       backgroundColor: const Color(0xFF111827), // Gray-900
       child: ListView(
+        padding: EdgeInsets.zero,
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Color(
-                0xFF1F2937,
-              ), // Gray-800 (sedikit lebih terang dari body)
+          // --- HEADER ---
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.only(top: 60.0, bottom: 20.0),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1F2937), // Gray-800
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'SPORRA',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                Image.asset(
+                  'assets/images/logotxt.png',
+                  height: 150,
+                  width: 150,
+                  fit: BoxFit.contain,
                 ),
-                Padding(padding: EdgeInsets.all(10)),
-                Text(
+                // const SizedBox(height: 5),
+                const Text(
                   "Your ultimate sports companion",
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 15, color: Colors.grey),
@@ -45,44 +48,57 @@ class LeftDrawer extends StatelessWidget {
             ),
           ),
 
+          const SizedBox(height: 20),
+
           // --- MENU ITEMS ---
 
-          // News Feed
+          // 2. News List
           ListTile(
             leading: const Icon(Icons.newspaper, color: Colors.white),
-            title: const Text('News Feed', style: TextStyle(color: Colors.white)),
+            title: const Text(
+              'News List',
+              style: TextStyle(color: Colors.white),
+            ),
             onTap: () {
-              Navigator.pushReplacement(
+              Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const MainMenu()),
               );
             },
           ),
 
-
-          // Tickets
+          // 3. Events (Placeholder)
+          ListTile(
+            leading: const Icon(
+              Icons.calendar_month_outlined,
+              color: Colors.white,
+            ),
+            title: const Text('Events', style: TextStyle(color: Colors.white)),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const EventHomePage()),
+              );
+            },
+          ),
           ListTile(
             leading: const Icon(
               Icons.confirmation_number_outlined,
               color: Colors.white,
             ),
-            title: const Text(
-              'Tickets (Soon)',
-              style: TextStyle(color: Colors.grey),
-            ),
+            title: const Text('Tickets', style: TextStyle(color: Colors.white)),
             onTap: () {
-              Navigator.pop(context); // Tutup drawer
+              Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text("Fitur Tiket segera hadir!")),
               );
+              //TODO: add redirect ke ticket
             },
           ),
 
-          // Divider pemisah
           const Divider(color: Colors.grey),
 
-          // 4. LOGIKA LOGIN / LOGOUT
-          // Jika user sedang login, tampilkan tombol Logout
+          // 5. LOGIKA LOGIN / LOGOUT
           if (request.loggedIn)
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
@@ -91,11 +107,9 @@ class LeftDrawer extends StatelessWidget {
                 style: TextStyle(color: Colors.redAccent),
               ),
               onTap: () async {
-                // Logika Logout sesuai tutorial
-                // Ganti URL dengan URL aplikasi Django kamu
                 final response = await request.logout(
-                  "https://afero-aqil-sporra.pbp.cs.ui.ac.id//auth/logout/",
-                ); // Sesuaikan port/I
+                  "http://localhost:8000/auth/logout/",
+                );
 
                 String message = response["message"];
                 if (context.mounted) {
@@ -106,12 +120,13 @@ class LeftDrawer extends StatelessWidget {
                         content: Text("$message See you again, $uname."),
                       ),
                     );
-                    // Kembali ke halaman Login setelah logout
-                    Navigator.pushReplacement(
+
+                    Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const LoginPage(),
                       ),
+                      (route) => false,
                     );
                   } else {
                     ScaffoldMessenger.of(
@@ -121,7 +136,6 @@ class LeftDrawer extends StatelessWidget {
                 }
               },
             )
-          // Jika user belum login, tampilkan tombol Login
           else
             ListTile(
               leading: const Icon(Icons.login, color: Colors.blueAccent),

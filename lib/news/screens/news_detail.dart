@@ -2,53 +2,91 @@
 // TODO: Connect forum API ke news
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sporra_mobile/news/models/news_entry.dart';
-import 'package:intl/intl.dart'; 
-import 'package:share_plus/share_plus.dart'; 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class NewsDetailPage extends StatelessWidget {
+class NewsDetailPage extends StatefulWidget {
   final NewsEntry news;
 
   const NewsDetailPage({super.key, required this.news});
 
-  // --- PALET WARNA ---
+  @override
+  State<NewsDetailPage> createState() => _NewsDetailPageState();
+}
+
+class _NewsDetailPageState extends State<NewsDetailPage> {
   final Color _bgPrimary = const Color(0xFF111827);
   final Color _textPrimary = const Color(0xFFF9FAFB);
   final Color _textSecondary = const Color(0xFF9CA3AF);
   final Color _accentBlue = const Color(0xFF2563EB);
   final Color _cardBg = const Color(0xFF1F2937);
 
+  bool isLoading = true;
+  List<dynamic> comments = [];
+  int commentCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchForum();
+  }
+
+  Future<void> fetchForum() async {
+    final articleId = widget.news.pk;
+    final url = Uri.parse("http://localhost:8000/forum/$articleId/json/");
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        setState(() {
+          comments = data["comments"];
+          commentCount = comments.length;
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      setState(() => isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final String formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(news.fields.createdAt);
+    final news = widget.news;
+    final String formattedDate =
+    DateFormat('dd MMM yyyy, HH:mm').format(news.fields.createdAt);
 
     return Scaffold(
       backgroundColor: _bgPrimary,
       body: CustomScrollView(
         slivers: [
-          //  HEADER GAMBAR (SliverAppBar)
           _buildSliverAppBar(context),
 
-          //  KONTEN BERITA (SliverToBoxAdapter)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildCategoryPill(),
+                  _buildCategoryPill(news),
                   const SizedBox(height: 16),
                   Text(
                     news.fields.title,
                     style: TextStyle(
                       color: _textPrimary,
-                      fontSize: 28, 
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       height: 1.2,
                     ),
                   ),
                   const SizedBox(height: 20),
-                  _buildAuthorInfo(formattedDate),
+                  _buildAuthorInfo(formattedDate, news),
                   const SizedBox(height: 24),
                   Divider(color: Colors.grey[800]),
                   const SizedBox(height: 24),
@@ -68,22 +106,22 @@ class NewsDetailPage extends StatelessWidget {
             ),
           ),
 
-          // 3. HEADER FORUM / KOMENTAR (SliverToBoxAdapter)
+          // --- HEADER DISKUSI ---
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+              padding:
+              const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Diskusi (0)", // Nanti ganti dengan jumlah komentar real-time
+                    "Diskusi ($commentCount)",
                     style: TextStyle(
                       color: _textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  // Tombol Filter ala Reddit (Best, New, Top)
                   DropdownButton<String>(
                     value: "Best",
                     dropdownColor: _cardBg,
@@ -91,30 +129,31 @@ class NewsDetailPage extends StatelessWidget {
                     icon: Icon(Icons.sort, color: _textSecondary),
                     style: TextStyle(color: _textSecondary),
                     items: ["Best", "New", "Top"].map((String value) {
-                      return DropdownMenuItem<String>(
+                      return DropdownMenuItem(
                         value: value,
                         child: Text(value),
                       );
                     }).toList(),
-                    onChanged: (_) {}, // TODO: Implement sort logic
+                    onChanged: (_) {},
                   ),
                 ],
               ),
             ),
           ),
 
+          // --- KOMENTAR ---
           _buildCommentSection(),
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
-      
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-            Share.share(
-              "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
-              subject: news.fields.title,
-            );
+          Share.share(
+            "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttp://localhost:8000/news/",
+            subject: news.fields.title,
+          );
         },
         backgroundColor: _accentBlue,
         child: const Icon(Icons.share, color: Colors.white),
@@ -122,14 +161,23 @@ class NewsDetailPage extends StatelessWidget {
     );
   }
 
-  // --- WIDGET BUILDERS ---
+  // ===============================================================
+  // WIDGET COMMENT SECTION
+  // ===============================================================
 
   Widget _buildCommentSection() {
-    // TODO: Nanti ganti ini dengan data real dari API Forum
-    // Jika komentar kosong, tampilkan placeholder. Jika ada, tampilkan list.
-    bool hasComments = false; 
+    if (isLoading) {
+      return const SliverToBoxAdapter(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(30),
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      );
+    }
 
-    if (!hasComments) {
+    if (comments.isEmpty) {
       return SliverToBoxAdapter(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -141,58 +189,93 @@ class NewsDetailPage extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey[600]),
+              Icon(Icons.chat_bubble_outline,
+                  size: 48, color: Colors.grey[600]),
               const SizedBox(height: 16),
               const Text(
                 "Belum ada diskusi",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                style:
+                TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
                 "Jadilah yang pertama memulai diskusi menarik ini!",
-                textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.grey[500]),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {}, // TODO: Buka form tambah komentar
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentBlue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
-                child: const Text("Mulai Diskusi"),
-              )
             ],
           ),
         ),
       );
-    } 
-    
-    // Contoh jika nanti sudah ada data (SliverList sangat efisien untuk list panjang)
-    /*
+    }
+
+    // Jika ada komentar
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          return CommentCardWidget(data: comments[index]); // Widget komentar Reddit-style
+            (context, index) {
+          final c = comments[index];
+          return _buildCommentCard(c);
         },
         childCount: comments.length,
       ),
     );
-    */
-    
-    // Return empty sliver for now to satisfy type check
-    return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 
-  Widget _buildCategoryPill() {
+  Widget _buildCommentCard(dynamic c) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _cardBg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[850]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            c["author"],
+            style: TextStyle(
+              color: _accentBlue,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            c["content"],
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(Icons.arrow_upward, size: 20, color: Colors.grey[500]),
+              const SizedBox(width: 4),
+              Text(
+                c["score"].toString(),
+                style: TextStyle(color: Colors.grey[300]),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===============================================================
+  // SUPPORTING WIDGETS
+  // ===============================================================
+
+  Widget _buildCategoryPill(NewsEntry news) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: _accentBlue.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
-        // ignore: deprecated_member_use
         border: Border.all(color: _accentBlue.withOpacity(0.5)),
       ),
       child: Text(
@@ -207,7 +290,7 @@ class NewsDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAuthorInfo(String formattedDate) {
+  Widget _buildAuthorInfo(String formattedDate, NewsEntry news) {
     return Row(
       children: [
         CircleAvatar(
@@ -218,15 +301,14 @@ class NewsDetailPage extends StatelessWidget {
               : null,
           child: (news.fields.authorPfp.isEmpty)
               ? Text(
-                  news.fields.author.isNotEmpty 
-                      ? news.fields.author[0].toUpperCase() 
-                      : "A",
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                )
+            news.fields.author.isNotEmpty
+                ? news.fields.author[0].toUpperCase()
+                : "A",
+            style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 18),
+          )
               : null,
         ),
         const SizedBox(width: 12),
@@ -256,8 +338,10 @@ class NewsDetailPage extends StatelessWidget {
   }
 
   Widget _buildSliverAppBar(BuildContext context) {
+    final news = widget.news;
+
     return SliverAppBar(
-      expandedHeight: 300.0,
+      expandedHeight: 300,
       pinned: true,
       backgroundColor: _bgPrimary,
       leading: IconButton(
@@ -273,13 +357,9 @@ class NewsDetailPage extends StatelessWidget {
           children: [
             news.fields.thumbnail.isNotEmpty
                 ? Image.network(
-                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: Colors.grey[900],
-                      child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-                    ),
-                  )
+              'http://localhost:8000/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+              fit: BoxFit.cover,
+            )
                 : Container(color: _accentBlue),
             const DecoratedBox(
               decoration: BoxDecoration(
@@ -290,7 +370,6 @@ class NewsDetailPage extends StatelessWidget {
                     Colors.transparent,
                     Color(0xAA111827),
                   ],
-                  stops: [0.6, 1.0],
                 ),
               ),
             ),

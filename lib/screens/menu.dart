@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/news/screens/news_entry_list.dart';
+import 'package:sporra_mobile/event/screens/event_home.dart';
 import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/widgets/profile_avatar.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
@@ -13,24 +16,22 @@ class MainMenu extends StatefulWidget {
 class _MainMenuState extends State<MainMenu> {
   int _selectedIndex = 0;
 
-  // Daftar Halaman yang akan ditampilkan di Body
   final List<Widget> _pages = [
-    const NewsEntryListPage(isEmbedded: true), // Halaman 0: News (Feed)
+    const NewsEntryListPage(isEmbedded: true),
     const Center(
       child: Text(
         "Event Page (Coming Soon)",
         style: TextStyle(color: Colors.white),
       ),
-    ), //TODO: Halaman Event
+    ),
     const Center(
       child: Text(
         "Tickets Page (Coming Soon)",
         style: TextStyle(color: Colors.white),
       ),
-    ), //TODO: Halaman Ticket
+    ),
   ];
 
-  // Judul AppBar berubah sesuai halaman
   final List<String> _titles = ["News Feed", "Events", "Tickets"];
 
   void _onItemTapped(int index) {
@@ -41,35 +42,60 @@ class _MainMenuState extends State<MainMenu> {
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+
     return Scaffold(
-      backgroundColor: const Color(0xFF111827), // Background Gelap (Dark Mode)
-      // --- APP BAR (REDDIT STYLE) ---
+      backgroundColor: const Color(0xFF111827),
+
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F2937), // Dark Gray
+        backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
         elevation: 1,
         title: Text(
           _titles[_selectedIndex],
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        // Tombol Profile di Kanan Atas
         actions: const [ProfileAvatarButton()],
       ),
 
-      // --- DRAWER (KIRI) ---
       drawer: const LeftDrawer(),
 
-      // --- BODY (KONTEN TENGAH) ---
-      // IndexedStack menjaga state halaman agar tidak reload saat ganti tab
       body: IndexedStack(index: _selectedIndex, children: _pages),
 
-      // --- BOTTOM NAVIGATION BAR (BAWAH) ---
+      floatingActionButton: (_selectedIndex == 0 && request.loggedIn)
+          ? FloatingActionButton(
+              onPressed: () {
+                // TODO: Ganti dengan Navigasi ke Form News yang asli
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => const NewsFormPage()),
+                // );
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      "Fitur Tambah Berita (Hanya untuk User Login)",
+                    ),
+                    backgroundColor: Colors.blueAccent,
+                  ),
+                );
+              },
+              backgroundColor: Colors.blue[700],
+              foregroundColor: Colors.white,
+              tooltip: 'Add News',
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+              child: const Icon(Icons.add, size: 28),
+            )
+          : null, // Jika tidak memenuhi syarat, tombol hilang (null)
+
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Colors.grey, width: 0.2)),
         ),
         child: BottomNavigationBar(
-          backgroundColor: const Color(0xFF1F2937), // Dark Gray
+          backgroundColor: const Color(0xFF1F2937),
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(icon: Icon(Icons.newspaper), label: 'News'),
             BottomNavigationBarItem(
@@ -82,10 +108,10 @@ class _MainMenuState extends State<MainMenu> {
             ),
           ],
           currentIndex: _selectedIndex,
-          selectedItemColor: Colors.blue[600], // Warna Biru saat aktif
-          unselectedItemColor: Colors.grey, // Warna Abu saat tidak aktif
+          selectedItemColor: Colors.blue[600],
+          unselectedItemColor: Colors.grey,
           showUnselectedLabels: true,
-          type: BottomNavigationBarType.fixed, // Agar icon tidak goyang
+          type: BottomNavigationBarType.fixed,
           onTap: _onItemTapped,
         ),
       ),

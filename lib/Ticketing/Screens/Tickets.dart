@@ -25,7 +25,7 @@ class AllTicketsPage extends StatefulWidget {
 
 class _AllTicketsPageState extends State<AllTicketsPage> {
   // Gunakan 10.0.2.2 untuk Emulator Android
-  final String baseUrl = "https://afero-aqil-sporra.pbp.cs.ui.ac.id";
+  final String baseUrl = "http://localhost:8000";
 
   List<Ticket> _allTickets = [];
   List<Ticket> _filteredTickets = [];
