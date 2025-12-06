@@ -2,40 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/authentication/login.dart';
+import 'package:sporra_mobile/authentication/user_provider.dart';
+import 'package:sporra_mobile/profile_user/screens/profile_page.dart';
+//TODO FIX Avatar not showing
 
 class ProfileAvatarButton extends StatelessWidget {
   const ProfileAvatarButton({super.key});
 
-  // Warna sesuai tema Sporra
   final Color _accentBlue = const Color(0xFF2563EB);
 
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
+    final userProvider = context.watch<UserProvider>();
 
+    // Cek status login
     if (request.loggedIn) {
       // --- JIKA SUDAH LOGIN ---
-
-      String username = "User";
-      String? pfpUrl;
-
-      // Parsing data dari response Login
-      try {
-        if (request.jsonData != null && request.jsonData is Map) {
-          // 1. Ambil Username
-          if (request.jsonData.containsKey('username')) {
-            username = request.jsonData['username'].toString();
-          }
-
-          // 2. Ambil URL Foto Profil (Cek berbagai kemungkinan key dari Django)
-          // Sesuaikan 'profile_picture' dengan key yang dikirim oleh view login Django kamu
-          if (request.jsonData.containsKey('profile_picture')) {
-            pfpUrl = request.jsonData['profile_picture'];
-          } else if (request.jsonData.containsKey('pfp')) {
-            pfpUrl = request.jsonData['pfp'];
-          }
-        }
-      } catch (e) {
+      
+      String username = userProvider.username;
+      String pfpUrl = userProvider.profilePicture; // Ambil foto dari provider
+      
+      if (username.isEmpty) {
         username = "User";
       }
 
@@ -43,42 +31,33 @@ class ProfileAvatarButton extends StatelessWidget {
         padding: const EdgeInsets.only(right: 16.0),
         child: GestureDetector(
           onTap: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text("Logged in as $username"),
-                duration: const Duration(seconds: 1),
-                backgroundColor: _accentBlue,
+            // --- JAUH LEBIH SEDERHANA ---
+            // Cukup push ke ProfilePage, biarkan halaman itu loading sendiri
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProfilePage(isOwnProfile: true),
               ),
             );
-            // TODO: Navigasi ke halaman Profil User disini
           },
           child: CircleAvatar(
             radius: 18,
             backgroundColor: _accentBlue,
-
-            // LOGIKA GAMBAR:
-            // Jika pfpUrl ada isinya, pakai NetworkImage. Jika tidak, null (agar child Text muncul)
-            backgroundImage: (pfpUrl != null && pfpUrl.isNotEmpty)
-                ? NetworkImage(pfpUrl)
+            // Jika ada URL foto valid, gunakan NetworkImage
+            backgroundImage: (pfpUrl.isNotEmpty) 
+                ? NetworkImage(pfpUrl) 
                 : null,
-
-            // LOGIKA TEKS (Fallback):
-            // Hanya tampilkan inisial jika tidak ada gambar
-            child: (pfpUrl == null || pfpUrl.isEmpty)
+            // Jika tidak ada foto, tampilkan inisial
+            child: (pfpUrl.isEmpty)
                 ? Text(
                     username.isNotEmpty ? username[0].toUpperCase() : "U",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   )
                 : null,
           ),
         ),
       );
     } else {
-      // --- JIKA BELUM LOGIN ---
       return Padding(
         padding: const EdgeInsets.only(right: 12.0),
         child: ElevatedButton(
@@ -89,7 +68,7 @@ class ProfileAvatarButton extends StatelessWidget {
             );
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: _accentBlue, // Pakai warna tema
+            backgroundColor: _accentBlue,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(

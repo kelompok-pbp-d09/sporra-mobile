@@ -1,192 +1,280 @@
-// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sporra_mobile/news/models/news_entry.dart';
 import 'package:sporra_mobile/news/screens/news_detail.dart';
+import 'package:sporra_mobile/news/screens/edit_news_form.dart';
+import 'package:sporra_mobile/authentication/user_provider.dart';
 
 class NewsEntryCard extends StatelessWidget {
   final NewsEntry news;
-  final VoidCallback? onTap; // Tambahkan kembali sebagai opsional
-  
+  final VoidCallback? onTap;
+
   const NewsEntryCard({super.key, required this.news, this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
+    final userProvider = context.watch<UserProvider>();
+    
+    String currentUsername = userProvider.username;
+    bool isAdmin = userProvider.isAdmin;
+
+    // Logika Menu: Tampil jika user adalah Admin ATAU Pembuat Berita
+    bool isAuthor = currentUsername.isNotEmpty && news.fields.author == currentUsername;
+    bool showMenu = isAdmin || isAuthor;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8.0),
       decoration: const BoxDecoration(color: Color(0xFF1F2937)),
-      child: InkWell(
-        // --- NAVIGASI KE DETAIL PAGE ---
-        // Gunakan onTap dari parent jika ada, jika tidak pakai default navigasi
-        onTap: onTap ?? () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => NewsDetailPage(news: news),
-            ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- HEADER (Author, Time, Menu) ---
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: Row(
-                children: [
-                  // --- AVATAR & AUTHOR CLICKABLE AREA ---
-                  GestureDetector(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text("Membuka profil: ${news.fields.author}"),
-                        ),
-                      );
-                    },
-                    child: Row(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap ?? () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NewsDetailPage(news: news),
+              ),
+            );
+          },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // --- HEADER ---
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 4, 8),
+                child: Row(
+                  children: [
+                    // Avatar & Nama
+                    GestureDetector(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("Membuka profil: ${news.fields.author}")),
+                        );
+                      },
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor: Colors.blue[700],
+                            backgroundImage: news.fields.authorPfp.isNotEmpty
+                                ? NetworkImage(news.fields.authorPfp)
+                                : null,
+                            child: news.fields.authorPfp.isEmpty
+                                ? Text(
+                                    news.fields.author.isNotEmpty
+                                        ? news.fields.author[0].toUpperCase()
+                                        : "A",
+                                    style: const TextStyle(fontSize: 12, color: Colors.white),
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            news.fields.author,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const Spacer(),
+
+                    // --- MENU TITIK TIGA ---
+                    if (showMenu)
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.more_horiz, color: Colors.grey[400], size: 20),
+                        color: const Color(0xFF374151),
+                        padding: EdgeInsets.zero,
+                        onSelected: (value) async {
+                          if (value == 'edit') {
+                            // --- NAVIGASI KE HALAMAN EDIT ---
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditNewsPage(news: news),
+                              ),
+                            );
+                          } else if (value == 'delete') {
+                            // --- LOGIKA DELETE ---
+                            _showDeleteConfirmation(context, request);
+                          }
+                        },
+                        itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                          const PopupMenuItem<String>(
+                            value: 'edit',
+                            child: ListTile(
+                              leading: Icon(Icons.edit, color: Colors.white),
+                              title: Text('Edit', style: TextStyle(color: Colors.white)),
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                            ),
+                          ),
+                          const PopupMenuItem<String>(
+                            value: 'delete',
+                            child: ListTile(
+                              leading: Icon(Icons.delete, color: Colors.redAccent),
+                              title: Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+
+              // --- JUDUL BERITA ---
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text(
+                  news.fields.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
+                  ),
+                ),
+              ),
+              
+              const SizedBox(height: 12),
+              
+              // --- GAMBAR ---
+              if (news.fields.thumbnail != null && news.fields.thumbnail.trim().isNotEmpty)
+                Container(
+                   constraints: const BoxConstraints(maxHeight: 500),
+                   width: double.infinity,
+                   child: Image.network(
+                      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(height: 100, color: Colors.grey[800]),
+                   ),
+                ),
+
+              // --- FOOTER ---
+              Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildActionPill(
                       children: [
-                        CircleAvatar(
-                          radius: 12,
-                          backgroundColor: Colors.blue[700],
-                          backgroundImage: news.fields.authorPfp.isNotEmpty
-                              ? NetworkImage(news.fields.authorPfp)
-                              : null,
-                          child: news.fields.authorPfp.isEmpty
-                              ? Text(
-                                  news.fields.author.isNotEmpty
-                                      ? news.fields.author[0].toUpperCase()
-                                      : "A",
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : null,
-                        ),
+                        const Icon(Icons.remove_red_eye_sharp, size: 20, color: Colors.grey),
                         const SizedBox(width: 8),
                         Text(
-                          news.fields.author,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          "${news.fields.newsViews}", 
+                          style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
-                  ),
-
-                  const Spacer(),
-
-                  Icon(Icons.more_horiz, color: Colors.grey[400], size: 20),
-                ],
-              ),
-            ),
-
-            // --- JUDUL BERITA ---
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                news.fields.title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  height: 1.3,
+                    _buildActionPill(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Fitur Komentar segera hadir!")),
+                        );
+                      },
+                      children: [
+                        const Icon(Icons.mode_comment_outlined, size: 18, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        const Text("Comments", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    _buildActionPill(
+                      onTap: () {
+                         Share.share(
+                          "Baca berita menarik di Sporra!\n\n${news.fields.title}\nOleh: ${news.fields.author}\n\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
+                          subject: news.fields.title,
+                        );
+                      },
+                      children: [
+                        const Icon(Icons.share_outlined, size: 18, color: Colors.grey),
+                        const SizedBox(width: 8),
+                        const Text("Share", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-            ),
-
-            // --- GAMBAR / KONTEN ---
-            const SizedBox(height: 12),
-            if (news.fields.thumbnail.isNotEmpty)
-              Container(
-                constraints: const BoxConstraints(maxHeight: 500),
-                width: double.infinity,
-                child: Image.network(
-                  'http://localhost:8000/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      height: 200,
-                      color: Colors.black12,
-                      child: const Center(child: CircularProgressIndicator()),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-
-            // --- FOOTER ---
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _buildActionPill(
-                    children: [
-                      const Icon(Icons.arrow_upward, size: 20, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      Text(
-                        "${news.fields.newsViews}",
-                        style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_downward, size: 20, color: Colors.grey),
-                    ],
-                  ),
-                  _buildActionPill(
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Fitur Komentar segera hadir!")),
-                      );
-                    },
-                    children: [
-                      const Icon(Icons.mode_comment_outlined, size: 18, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "Comments",
-                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  
-                  // --- TOMBOL SHARE BERFUNGSI ---
-                  _buildActionPill(
-                    onTap: () {
-                      Share.share(
-                        "Baca berita menarik di Sporra!\n\n"
-                        "${news.fields.title}\n"
-                        "Oleh: ${news.fields.author}\n\n"
-                        "http://localhost:8000/news/", // Ganti dengan deep link jika ada
-                        subject: news.fields.title,
-                      );
-                    },
-                    children: [
-                      const Icon(Icons.share_outlined, size: 18, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "Share",
-                        style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );
   }
 
+  // --- DIALOG KONFIRMASI DELETE ---
+  void _showDeleteConfirmation(BuildContext context, CookieRequest request) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1F2937),
+          title: const Text('Konfirmasi Hapus', style: TextStyle(color: Colors.white)),
+          content: const Text('Apakah Anda yakin ingin menghapus berita ini?', style: TextStyle(color: Colors.white70)),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Tutup dialog
+                await _deleteNews(context, request);
+              },
+              child: const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // --- FUNGSI API DELETE ---
+  Future<void> _deleteNews(BuildContext context, CookieRequest request) async {
+    // Sesuai urls.py: delete-flutter/<str:id>/
+    final url = 'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/delete-flutter/${news.pk}/';
+    
+    try {
+      final response = await request.post(url, {});
+
+      if (response['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Berita berhasil dihapus!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // Refresh halaman (biasanya user harus manual refresh atau gunakan callback)
+        // Di sini kita biarkan user pull-to-refresh di home page
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Gagal menghapus: ${response['message'] ?? 'Unknown error'}"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+      );
+    }
+  }
+
   Widget _buildActionPill({required List<Widget> children, VoidCallback? onTap}) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
