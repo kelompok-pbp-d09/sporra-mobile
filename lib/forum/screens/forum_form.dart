@@ -45,7 +45,7 @@ class _ForumFormState extends State<ForumForm> {
         widget.onSuccess();
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Komentar berhasil ditambahkan!")),
+          const SnackBar(content: Text("Comment successfully added!")),
         );
       } else if (response != null && response is Map && response.containsKey('error')) {
         if (!mounted) return;
@@ -93,7 +93,7 @@ class _ForumFormState extends State<ForumForm> {
             maxLines: 4,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: "Tulis komentar...",
+              hintText: "Write a comment...",
               hintStyle: TextStyle(color: Colors.grey[400]),
               filled: true,
               fillColor: const Color(0xFF374151),
@@ -119,7 +119,7 @@ class _ForumFormState extends State<ForumForm> {
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
                     : const Text(
-                      "Kirim",
+                      "Send",
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

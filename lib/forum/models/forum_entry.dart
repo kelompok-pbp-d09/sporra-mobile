@@ -49,6 +49,7 @@ class Comment {
   int score;
   DateTime createdAt;
   int userVote;
+  bool canModify;
 
   Comment({
     required this.id,
@@ -57,6 +58,7 @@ class Comment {
     required this.score,
     required this.createdAt,
     this.userVote = 0,
+    this.canModify = false,
   });
 
   factory Comment.fromJson(Map<String, dynamic> json) => Comment(
@@ -66,6 +68,7 @@ class Comment {
     score: json["score"],
     createdAt: DateTime.parse(json["created_at"]),
     userVote: json["user_vote"] ?? 0,
+    canModify: json["can_modify"] ?? false,
   );
 
   Map<String, dynamic> toJson() => {
@@ -75,6 +78,7 @@ class Comment {
     "score": score,
     "created_at": createdAt.toIso8601String(),
     "user_vote": userVote,
+    "can_modify": canModify,
   };
 }
 

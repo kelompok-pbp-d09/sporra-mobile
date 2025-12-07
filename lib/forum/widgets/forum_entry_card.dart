@@ -3,14 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-
-// =============================================
-// REDDIT‑STYLE FORUM COMMENT UI (FINAL, CLEAN)
-// =============================================
-// - Warna tetap sama (cardBg, accentBlue, textPrimary)
-// - Align rapi, popup menu stabil, avatar placeholder, spacing konsisten
-// - Comment layout mirip Reddit
-// =============================================
+import 'package:sporra_mobile/authentication/login.dart';
+import 'package:sporra_mobile/forum/models/forum_entry.dart';
 
 typedef ForumRefresh = Future<void> Function();
 
@@ -48,27 +42,34 @@ class ForumEntryCardState extends State<ForumEntryCard> {
   Future<void> refresh() async => fetchForum();
 
   Future<void> fetchForum() async {
-    final url = Uri.parse("http://localhost:8000/forum/${widget.articleId}/json/");
+    final request = context.read<CookieRequest>();
+    final data = await request.get("https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/${widget.articleId}/json/");
+    print("COOKIES USED => ${request.cookies}");
+    print("RAW COMMENTS FROM BACKEND => ${data['comments']}");
 
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        setState(() {
-          comments = data["comments"] ?? [];
-          _applySorting();
-          isLoading = false;
-        });
-        widget.onRefresh?.call();
-      } else {
-        setState(() => isLoading = false);
-      }
-    } catch (e) {
-      setState(() => isLoading = false);
-    }
+    // Parse ke model dulu
+    final forum = ForumEntry.fromJson(data);
+
+    setState(() {
+      comments = forum.comments.map((c) => {
+        "id": c.id,
+        "author": c.author,
+        "content": c.content,
+        "score": c.score,
+        "created_at": c.createdAt.toIso8601String(),
+        "user_vote": c.userVote,
+        "can_modify": c.canModify,
+      }).toList();
+      _applySorting();
+      isLoading = false;
+    });
+
+    print("COMMENTS AFTER PARSE => $comments");
+    print("FIRST can_modify => ${comments[0]["can_modify"]}");
   }
 
-  // SORTING -----------------------------------
+
+  // SORTING
   void _applySorting() {
     if (sort == "Best") {
       comments.sort((a, b) => (b["score"] ?? 0).compareTo(a["score"] ?? 0));
@@ -81,7 +82,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     }
   }
 
-  // TIME AGO ----------------------------------
+  // TIME AGO
   String timeAgo(DateTime t) {
     final diff = DateTime.now().difference(t);
     if (diff.inSeconds < 60) return "${diff.inSeconds}s ago";
@@ -91,41 +92,50 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     return "${t.day}/${t.month}/${t.year}";
   }
 
-  // EDIT --------------------------------------
+  // EDIT
   Future<void> _editCommentRequest(int id, String newContent) async {
     final request = context.read<CookieRequest>();
     final response = await request.post(
-      "http://localhost:8000/forum/edit_comment/$id/",
+      "https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/edit_comment/$id/",
       {"content": newContent},
     );
 
     if (response["success"] == true) {
       await fetchForum();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Komentar berhasil diubah")),
+        const SnackBar(content: Text("Comment successfully changed")),
       );
     }
   }
 
-  // DELETE ------------------------------------
+  // DELETE
   Future<void> _deleteCommentRequest(int id) async {
     final request = context.read<CookieRequest>();
     final response = await request.post(
-      "http://localhost:8000/forum/delete_comment/$id/",
+      "https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/delete_comment/$id/",
       {},
     );
 
     if (response["success"] == true) {
       await fetchForum();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Komentar berhasil dihapus")),
+        const SnackBar(content: Text("Comment successfully deleted")),
       );
     }
   }
 
-  // VOTING ------------------------------------
+  // VOTING
   Future<void> _voteComment(int id, int value) async {
     final req = context.read<CookieRequest>();
+
+    if (!req.loggedIn) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+      return;
+    }
+
     final idx = comments.indexWhere((c) => c["id"] == id);
     int prev = idx != -1 ? comments[idx]["user_vote"] ?? 0 : 0;
 
@@ -135,7 +145,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     else type = prev == 1 ? "up" : prev == -1 ? "down" : "up";
 
     final res = await req.post(
-      "http://localhost:8000/forum/post/$id/vote/",
+      "https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/post/$id/vote/",
       {"vote": type},
     );
 
@@ -148,27 +158,27 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     }
   }
 
-  // POPUP MENU --------------------------------
+  // POPUP MENU
   void _showEditDialog(dynamic c) {
     final ctrl = TextEditingController(text: c["content"] ?? "");
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: widget.cardBg,
-        title: const Text("Edit Komentar", style: TextStyle(color: Colors.white)),
+        title: const Text("Edit Comment", style: TextStyle(color: Colors.white)),
         content: TextField(
           controller: ctrl,
           maxLines: 5,
           style: const TextStyle(color: Colors.white),
           decoration: const InputDecoration(
-            hintText: "Tulis komentar...",
+            hintText: "Write a comment...",
             hintStyle: TextStyle(color: Colors.white54),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal", style: TextStyle(color: Colors.white70)),
+            child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
           ),
           TextButton(
             onPressed: () async {
@@ -177,7 +187,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
                 _editCommentRequest(c["id"], ctrl.text.trim());
               }
             },
-            child: Text("Simpan", style: TextStyle(color: widget.accentBlue)),
+            child: Text("Save", style: TextStyle(color: widget.accentBlue)),
           ),
         ],
       ),
@@ -189,26 +199,26 @@ class ForumEntryCardState extends State<ForumEntryCard> {
       context: context,
       builder: (_) => AlertDialog(
         backgroundColor: widget.cardBg,
-        title: const Text("Hapus Komentar?", style: TextStyle(color: Colors.white)),
-        content: const Text("Aksi ini tidak dapat dikembalikan.", style: TextStyle(color: Colors.grey)),
+        title: const Text("Delete comment?", style: TextStyle(color: Colors.white)),
+        content: const Text("This action can't be undone", style: TextStyle(color: Colors.grey)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Batal", style: TextStyle(color: Colors.white70)),
+            child: const Text("Cancel", style: TextStyle(color: Colors.white70)),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               _deleteCommentRequest(c["id"]);
             },
-            child: const Text("Hapus", style: TextStyle(color: Colors.redAccent)),
+            child: const Text("Delete", style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
     );
   }
 
-  // HEADER ------------------------------------
+  // HEADER
   Widget _buildHeader() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 15, 20, 0),
@@ -216,7 +226,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            "Diskusi (${comments.length})",
+            "Discussion (${comments.length})",
             style: TextStyle(
               color: widget.textPrimary,
               fontSize: 20,
@@ -242,7 +252,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     );
   }
 
-  // MAIN UI -----------------------------------
+  // MAIN UI
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -282,7 +292,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     );
   }
 
-  // EMPTY STATE --------------------------------
+  // EMPTY STATE
   Widget _buildEmptyState() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal:
@@ -301,12 +311,12 @@ class ForumEntryCardState extends State<ForumEntryCard> {
             Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey[600]),
             const SizedBox(height: 16),
             const Text(
-              "Belum ada diskusi",
+              "No discussions yet",
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              "Jadilah yang pertama memulai diskusi menarik ini!",
+              "Be the first to start this interesting discussion!",
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
             ),
@@ -316,12 +326,14 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     );
   }
 
-  // COMMENT CARD ------------------------------------
+  // COMMENT CARD
   Widget _buildCommentCard(dynamic c) {
     final created = DateTime.tryParse(c["created_at"] ?? "") ?? DateTime.now();
     final request = context.read<CookieRequest>();
     final currentUser = request.jsonData["username"];
     final isOwner = c["author"] == currentUser;
+    final canModify = c["can_modify"] ?? false;
+
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -334,7 +346,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // LEFT VOTE COLUMN -------------------------------------
+          // LEFT VOTE COLUMN
           Column(
             children: [
               GestureDetector(
@@ -362,7 +374,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
 
           const SizedBox(width: 12),
 
-          // COMMENT BODY -----------------------------------------
+          // COMMENT BODY
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -391,7 +403,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
                     ),
 
                     // Popup menu stays vertically centered
-                    if (isOwner)
+                    if (isOwner || canModify)
                       PopupMenuButton<int>(
                         icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 18),
                         color: widget.cardBg,
@@ -406,7 +418,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
                           ),
                           const PopupMenuItem(
                             value: 2,
-                            child: Text("Hapus", style: TextStyle(color: Colors.redAccent)),
+                            child: Text("Delete", style: TextStyle(color: Colors.redAccent)),
                           ),
                         ],
                       ),
