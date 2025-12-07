@@ -12,8 +12,14 @@ import 'package:sporra_mobile/authentication/user_provider.dart';
 class NewsEntryCard extends StatelessWidget {
   final NewsEntry news;
   final VoidCallback? onTap;
+  final VoidCallback? onRefresh; // 1. Tambahkan parameter ini
 
-  const NewsEntryCard({super.key, required this.news, this.onTap});
+  const NewsEntryCard({
+    super.key, 
+    required this.news, 
+    this.onTap,
+    this.onRefresh, // 2. Masukkan ke constructor
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +29,6 @@ class NewsEntryCard extends StatelessWidget {
     String currentUsername = userProvider.username;
     bool isAdmin = userProvider.isAdmin;
 
-    // Logika Menu: Tampil jika user adalah Admin ATAU Pembuat Berita
     bool isAuthor = currentUsername.isNotEmpty && news.fields.author == currentUsername;
     bool showMenu = isAdmin || isAuthor;
 
@@ -49,7 +54,6 @@ class NewsEntryCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 4, 8),
                 child: Row(
                   children: [
-                    // Avatar & Nama
                     GestureDetector(
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -96,7 +100,6 @@ class NewsEntryCard extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         onSelected: (value) async {
                           if (value == 'edit') {
-                            // --- NAVIGASI KE HALAMAN EDIT ---
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -104,7 +107,6 @@ class NewsEntryCard extends StatelessWidget {
                               ),
                             );
                           } else if (value == 'delete') {
-                            // --- LOGIKA DELETE ---
                             _showDeleteConfirmation(context, request);
                           }
                         },
@@ -155,9 +157,9 @@ class NewsEntryCard extends StatelessWidget {
                    constraints: const BoxConstraints(maxHeight: 500),
                    width: double.infinity,
                    child: Image.network(
-                      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(height: 100, color: Colors.grey[800]),
+                     'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                     fit: BoxFit.cover,
+                     errorBuilder: (context, error, stackTrace) => Container(height: 100, color: Colors.grey[800]),
                    ),
                 ),
 
@@ -191,10 +193,10 @@ class NewsEntryCard extends StatelessWidget {
                     ),
                     _buildActionPill(
                       onTap: () {
-                         Share.share(
-                          "Baca berita menarik di Sporra!\n\n${news.fields.title}\nOleh: ${news.fields.author}\n\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
-                          subject: news.fields.title,
-                        );
+                          Share.share(
+                           "Read interesting sport news on Sporra!\n\n${news.fields.title}\nOleh: ${news.fields.author}\n\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
+                           subject: news.fields.title,
+                         );
                       },
                       children: [
                         const Icon(Icons.share_outlined, size: 18, color: Colors.grey),
@@ -219,19 +221,19 @@ class NewsEntryCard extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1F2937),
-          title: const Text('Konfirmasi Hapus', style: TextStyle(color: Colors.white)),
-          content: const Text('Apakah Anda yakin ingin menghapus berita ini?', style: TextStyle(color: Colors.white70)),
+          title: const Text('News deletion confirmation', style: TextStyle(color: Colors.white)),
+          content: const Text('Are you sure you want to delete this news?', style: TextStyle(color: Colors.white70)),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () async {
                 Navigator.of(context).pop(); // Tutup dialog
                 await _deleteNews(context, request);
               },
-              child: const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+              child: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
             ),
           ],
         );
@@ -241,25 +243,29 @@ class NewsEntryCard extends StatelessWidget {
 
   // --- FUNGSI API DELETE ---
   Future<void> _deleteNews(BuildContext context, CookieRequest request) async {
-    // Sesuai urls.py: delete-flutter/<str:id>/
     final url = 'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/delete-flutter/${news.pk}/';
     
     try {
       final response = await request.post(url, {});
 
-      if (response['status'] == 'success') {
+      // 3. PERBAIKAN: Gunakan boolean `true`
+      if (response['status'] == true || response['status'] == 'success') {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Berita berhasil dihapus!"),
+            content: Text("News successfully deleted!"),
             backgroundColor: Colors.green,
           ),
         );
-        // Refresh halaman (biasanya user harus manual refresh atau gunakan callback)
-        // Di sini kita biarkan user pull-to-refresh di home page
+        
+        // 4. PANGGIL CALLBACK PARENT UNTUK REFRESH
+        if (onRefresh != null) {
+          onRefresh!(); 
+        }
+
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Gagal menghapus: ${response['message'] ?? 'Unknown error'}"),
+            content: Text("Failed to delete: ${response['message'] ?? 'Unknown error'}"),
             backgroundColor: Colors.red,
           ),
         );

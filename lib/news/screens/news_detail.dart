@@ -8,7 +8,6 @@ import 'package:share_plus/share_plus.dart';
 import 'package:sporra_mobile/forum/widgets/forum_entry_card.dart';
 import 'package:sporra_mobile/forum/screens/forum_form.dart';
 
-
 class NewsDetailPage extends StatelessWidget {
   final NewsEntry news;
 
@@ -24,7 +23,9 @@ class NewsDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(news.fields.createdAt);
+    final String formattedDate = DateFormat(
+      'dd MMM yyyy, HH:mm',
+    ).format(news.fields.createdAt);
 
     return Scaffold(
       backgroundColor: _bgPrimary,
@@ -101,7 +102,7 @@ class NewsDetailPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Share.share(
-            "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttp://localhost:8000/news/",
+            "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
             subject: news.fields.title,
           );
         },
@@ -110,7 +111,6 @@ class NewsDetailPage extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildCategoryPill() {
     return Container(
@@ -145,15 +145,15 @@ class NewsDetailPage extends StatelessWidget {
               : null,
           child: (news.fields.authorPfp.isEmpty)
               ? Text(
-            news.fields.author.isNotEmpty
-                ? news.fields.author[0].toUpperCase()
-                : "A",
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          )
+                  news.fields.author.isNotEmpty
+                      ? news.fields.author[0].toUpperCase()
+                      : "A",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                )
               : null,
         ),
         const SizedBox(width: 12),
@@ -171,10 +171,7 @@ class NewsDetailPage extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               formattedDate,
-              style: TextStyle(
-                color: _textSecondary,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: _textSecondary, fontSize: 13),
             ),
           ],
         ),
@@ -200,23 +197,22 @@ class NewsDetailPage extends StatelessWidget {
           children: [
             news.fields.thumbnail.isNotEmpty
                 ? Image.network(
-              'http://localhost:8000/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.grey[900],
-                child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
-              ),
-            )
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      color: Colors.grey[900],
+                      child: const Center(
+                        child: Icon(Icons.broken_image, color: Colors.grey),
+                      ),
+                    ),
+                  )
                 : Container(color: _accentBlue),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Color(0xAA111827),
-                  ],
+                  colors: [Colors.transparent, Color(0xAA111827)],
                   stops: [0.6, 1.0],
                 ),
               ),

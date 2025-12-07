@@ -37,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<UserProfile> fetchUserProfile(CookieRequest request) async {
     // Ganti URL sesuai environment (10.0.2.2 untuk Emulator Android)
     final response = await request.get(
-      'http://localhost:8000/profile_user/json/',
+      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/json/',
     );
 
     // Cek apakah response valid dan status True

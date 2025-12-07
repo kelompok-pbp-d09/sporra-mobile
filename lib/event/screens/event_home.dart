@@ -233,7 +233,7 @@ class _EventHomePageState extends State<EventHomePage> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilterChip(
-              label: const Text('Semua'),
+              label: const Text('All'),
               selected: currentCategory.isEmpty,
               onSelected: (_) => changeCategory(''),
               backgroundColor: Colors.grey[700],

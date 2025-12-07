@@ -47,6 +47,7 @@ class _LoginPageState extends State<LoginPage> {
                 'Login',
                 style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
               ),
+              const SizedBox(height: 20),
 
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
@@ -112,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                             }
 
                             final response = await request.login(
-                              "http://localhost:8000/profile_user/auth/login/",
+                              "https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/auth/login/",
                               {'username': username, 'password': password},
                             );
 
@@ -142,7 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                                 );
                                 
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text("$message Welcome, $uname (Admin: $isAdmin)"),
+                                  content: Text("$message Welcome"),
                                   backgroundColor: Colors.green,
                                 ));
                               }

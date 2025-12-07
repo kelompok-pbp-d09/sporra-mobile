@@ -54,11 +54,11 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
           // --- MENU ITEMS ---
 
-          // 2. News List
+          // 2. News Feed
           ListTile(
             leading: const Icon(Icons.newspaper, color: Colors.white),
             title: const Text(
-              'News List',
+              'News Feed',
               style: TextStyle(color: Colors.white),
             ),
             onTap: () {

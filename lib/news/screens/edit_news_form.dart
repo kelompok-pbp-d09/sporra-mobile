@@ -27,7 +27,7 @@ class _EditNewsPageState extends State<EditNewsPage> {
 
   // Daftar kategori (sesuaikan dengan choices di Django)
   final List<String> _categories = [
-    'sepakbola',
+    'football',
     'f1',
     'moto gp',
     'bulu tangkis',
@@ -41,7 +41,7 @@ class _EditNewsPageState extends State<EditNewsPage> {
     _content = widget.news.fields.content;
     _thumbnail = widget.news.fields.thumbnail;
     
-    String existingCategory = "sepakbola"; // Default fallback
+    String existingCategory = "football"; // Default fallback
     
     if (_categories.contains(existingCategory)) {
         _category = existingCategory;

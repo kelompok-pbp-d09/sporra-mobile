@@ -29,7 +29,7 @@ class _EventEditPageState extends State<EventEditPage> {
     'futsal',
     'sepak bola',
     'renang',
-    'lainnya',
+    'others',
   ];
 
   @override
@@ -41,7 +41,7 @@ class _EventEditPageState extends State<EventEditPage> {
 
     _kategori = _categories.contains(widget.event.kategori.toLowerCase())
         ? widget.event.kategori.toLowerCase()
-        : 'lainnya';
+        : 'others';
 
     _date = widget.event.dateFormatted.replaceAll(',', '');
   }

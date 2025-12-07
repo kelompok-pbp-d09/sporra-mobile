@@ -4,8 +4,6 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/screens/menu.dart';
 
-//TODO: fix
-
 class NewsFormPage extends StatefulWidget {
   const NewsFormPage({super.key});
 
@@ -19,12 +17,12 @@ class _NewsFormPageState extends State<NewsFormPage> {
   // Variabel untuk menyimpan input user
   String _title = "";
   String _content = "";
-  String _category = "sepakbola";
+  String _category = "football";
   String _thumbnail = "";
 
   // Daftar kategori (sesuaikan dengan choices di Django models.py)
   final List<String> _categories = [
-    'sepakbola',
+    'football',
     'f1',
     'moto gp',
     'bulu tangkis',
@@ -143,10 +141,9 @@ class _NewsFormPageState extends State<NewsFormPage> {
                   ),
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-
                       // Kirim data ke Django
                       final response = await request.postJson(
-                        "https://afero-aqil-sporra.pbp.cs.ui.ac.id/create-flutter/",
+                        "https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/create-flutter/",
                         jsonEncode(<String, String>{
                           'title': _title,
                           'content': _content,
@@ -156,7 +153,8 @@ class _NewsFormPageState extends State<NewsFormPage> {
                       );
 
                       if (context.mounted) {
-                        if (response['status'] == 'success') {
+                        // PERBAIKAN DI SINI: Cek 'status' == true
+                        if (response['status'] == true) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("News successfully created!"),
@@ -170,8 +168,9 @@ class _NewsFormPageState extends State<NewsFormPage> {
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("Failed to create news. Please try again."),
+                            SnackBar(
+                              // Tampilkan pesan error dari server jika ada
+                              content: Text(response['message'] ?? "Failed to create news."),
                               backgroundColor: Colors.red,
                             ),
                           );

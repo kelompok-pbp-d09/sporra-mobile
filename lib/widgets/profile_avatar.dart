@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 import 'package:sporra_mobile/authentication/user_provider.dart';
 import 'package:sporra_mobile/profile_user/screens/profile_page.dart';
-//TODO FIX Avatar not showing
 
 class ProfileAvatarButton extends StatelessWidget {
   const ProfileAvatarButton({super.key});
@@ -19,10 +18,10 @@ class ProfileAvatarButton extends StatelessWidget {
     // Cek status login
     if (request.loggedIn) {
       // --- JIKA SUDAH LOGIN ---
-      
+
       String username = userProvider.username;
       String pfpUrl = userProvider.profilePicture; // Ambil foto dari provider
-      
+
       if (username.isEmpty) {
         username = "User";
       }
@@ -44,14 +43,15 @@ class ProfileAvatarButton extends StatelessWidget {
             radius: 18,
             backgroundColor: _accentBlue,
             // Jika ada URL foto valid, gunakan NetworkImage
-            backgroundImage: (pfpUrl.isNotEmpty) 
-                ? NetworkImage(pfpUrl) 
-                : null,
+            backgroundImage: (pfpUrl.isNotEmpty) ? NetworkImage(pfpUrl) : null,
             // Jika tidak ada foto, tampilkan inisial
             child: (pfpUrl.isEmpty)
                 ? Text(
                     username.isNotEmpty ? username[0].toUpperCase() : "U",
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   )
                 : null,
           ),

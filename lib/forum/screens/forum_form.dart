@@ -29,7 +29,7 @@ class _ForumFormState extends State<ForumForm> {
     setState(() => _isSending = true);
 
     final request = context.read<CookieRequest>();
-    final url = "http://localhost:8000/forum/${widget.articleId}/add_comment/";
+    final url = "https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/${widget.articleId}/add_comment/";
 
     try {
       // POST form data (CookieRequest.post akan mengirim x-www-form-urlencoded dan CSRF cookie)

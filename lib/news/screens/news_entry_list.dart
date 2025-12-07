@@ -16,22 +16,22 @@ class NewsEntryListPage extends StatefulWidget {
 
 class _NewsEntryListPageState extends State<NewsEntryListPage> {
   // 1. State untuk menyimpan kategori yang sedang dipilih
-  String _selectedCategory = 'Semua';
+  String _selectedCategory = 'All';
 
   // 2. Daftar Kategori sesuai model Django
   // 'label': Teks yang muncul di UI, 'value': Nilai yang dicocokkan dengan data API
   final List<Map<String, String>> _categories = [
-    {'label': 'Semua', 'value': 'Semua'},
-    {'label': 'Sepakbola', 'value': 'sepakbola'},
+    {'label': 'All', 'value': 'All'},
+    {'label': 'Football', 'value': 'sepakbola'},
     {'label': 'F1', 'value': 'f1'},
     {'label': 'Moto GP', 'value': 'moto gp'},
-    {'label': 'Raket', 'value': 'raket'},
-    {'label': 'Lainnya', 'value': 'olahraga lain'},
+    {'label': 'Racket', 'value': 'raket'},
+    {'label': 'Others', 'value': 'olahraga lain'},
   ];
 
   Future<List<NewsEntry>> fetchNews(CookieRequest request) async {
     final response = await request.get(
-      'http://localhost:8000/news/json/',
+      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/json/',
     );
 
     var data = response;
@@ -113,7 +113,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                 if (!snapshot.hasData) {
                   return const Center(
                     child: Text(
-                      'Belum ada data berita.',
+                      'No news yet.',
                       style: TextStyle(color: Colors.grey),
                     ),
                   );
@@ -122,7 +122,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                   List<NewsEntry> allNews = snapshot.data!;
                   List<NewsEntry> filteredNews;
 
-                  if (_selectedCategory == 'Semua') {
+                  if (_selectedCategory == 'All') {
                     filteredNews = allNews;
                   } else {
                     // Filter berdasarkan field category dari Django
@@ -145,7 +145,7 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Tidak ada berita di kategori ini.',
+                            'No news in this category.',
                             style: TextStyle(color: Colors.grey[500]),
                           ),
                         ],
@@ -154,16 +154,13 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(
-                      8,
-                      0,
-                      8,
-                      80,
-                    ), // Padding bawah utk FAB
+                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 80),
                     itemCount: filteredNews.length,
                     itemBuilder: (_, index) => NewsEntryCard(
                       news: filteredNews[index],
-                      // Kita tidak perlu onTap di sini karena sudah di handle di dalam Card
+                      onRefresh: () {
+                        setState(() {});
+                      },
                     ),
                   );
                 }
