@@ -21,10 +21,15 @@ class EventDetailPage extends StatefulWidget {
 }
 
 class _EventDetailPageState extends State<EventDetailPage> {
+  // --- WARNA TEMA ---
+  final Color _bgPrimary = const Color(0xFF111827);
+  final Color _cardBg = const Color(0xFF1F2937);
+  final Color _accentBlue = const Color(0xFF2563EB);
+
   Future<void> _deleteEvent(CookieRequest request) async {
     try {
       final response = await request.post(
-        'http://127.0.0.1:8000/event/event/${widget.event.id}/delete/',
+        'https://afero-aqil-sporra.pbp.cs.ui.ac.id/event/event/${widget.event.id}/delete/',
         {},
       );
 
@@ -40,199 +45,189 @@ class _EventDetailPageState extends State<EventDetailPage> {
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(response['message'] ?? 'Gagal menghapus'),
+          const SnackBar(
+            content: Text('Gagal menghapus'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-        );
-      }
+      // error handling
     }
   }
 
   void _showDeleteConfirmation(BuildContext context, CookieRequest request) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1F2937),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      builder: (context) => AlertDialog(
+        backgroundColor: _cardBg,
+        title: const Text(
+          'Hapus Event?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Event akan dihapus permanen.',
+          style: TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: Colors.white)),
           ),
-          title: const Row(
-            children: [
-              Icon(Icons.warning, color: Colors.red, size: 28),
-              SizedBox(width: 12),
-              Text('Hapus Event?', style: TextStyle(color: Colors.white)),
-            ],
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteEvent(request);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
           ),
-          content: RichText(
-            text: TextSpan(
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
-              children: [
-                const TextSpan(text: 'Event "'),
-                TextSpan(
-                  text: widget.event.judul,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const TextSpan(
-                  text:
-                      '" akan dihapus secara permanen dan tidak dapat dikembalikan.',
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[600]),
-              onPressed: () {
-                Navigator.pop(context);
-                _deleteEvent(request);
-              },
-              child: const Text('Hapus Event'),
-            ),
-          ],
-        );
-      },
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
-
-    final bgColor = widget.hasEnded
-        ? const Color(0xFF374151).withOpacity(0.8)
-        : const Color(0xFF1F2937);
-
     final dateColor = widget.hasEnded ? Colors.red[300] : Colors.grey[300];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF111827),
-      appBar: AppBar(
-        title: const Text("SPORRA"),
-        backgroundColor: const Color(0xFF1F2937),
-        foregroundColor: Colors.white,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Back
-            FloatingActionButton(
-              mini: true,
-              backgroundColor: Colors.grey[700]?.withOpacity(0.8),
+      backgroundColor: _bgPrimary,
+      body: CustomScrollView(
+        slivers: [
+          // --- 1. HEADER KEREN (SliverAppBar) ---
+          SliverAppBar(
+            expandedHeight: 200.0,
+            pinned: true,
+            backgroundColor: _bgPrimary,
+            // TOMBOL BACK BULAT SEPERTI NEWS DETAIL
+            leading: IconButton(
+              icon: const CircleAvatar(
+                backgroundColor: Colors.black54,
+                child: Icon(Icons.arrow_back, color: Colors.white),
+              ),
               onPressed: () => Navigator.pop(context),
-              child: const Icon(Icons.arrow_back),
             ),
-            const SizedBox(height: 24),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: widget.hasEnded
-                      ? Colors.grey.shade700
-                      : Colors.grey.shade800,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                color: _cardBg,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.event, size: 80, color: Colors.grey[700]),
+                      if (widget.hasEnded)
+                        Text(
+                          "EVENT ENDED",
+                          style: TextStyle(
+                            color: Colors.red[300],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
+            ),
+          ),
+
+          // --- 2. KONTEN DETAIL ---
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Judul
                   Text(
                     widget.event.judul,
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
+                      height: 1.2,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Divider(
-                    color: widget.hasEnded
-                        ? Colors.grey[500]
-                        : Colors.grey[700],
-                    thickness: 1,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    widget.event.kategoriDisplay,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: Colors.grey,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          widget.event.lokasi,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        widget.hasEnded ? Icons.cancel : Icons.access_time,
-                        size: 16,
-                        color: dateColor,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          widget.event.dateFormatted,
-                          style: TextStyle(color: dateColor, fontSize: 14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.event.deskripsi,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
                   ),
                   const SizedBox(height: 16),
 
-                  // Join
+                  // Kategori Pill
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _accentBlue.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _accentBlue.withOpacity(0.5)),
+                    ),
+                    child: Text(
+                      widget.event.kategoriDisplay.toUpperCase(),
+                      style: TextStyle(
+                        color: _accentBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Info Lokasi & Waktu
+                  _buildInfoRow(
+                    Icons.location_on,
+                    widget.event.lokasi,
+                    Colors.grey,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    widget.hasEnded ? Icons.cancel : Icons.access_time,
+                    widget.event.dateFormatted,
+                    dateColor!,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  Row(
+                    children: [
+                      const Icon(Icons.person, color: Colors.grey, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Created by: ${widget.event.username ?? 'Anonymous'}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+                  Divider(color: Colors.grey[800]),
+                  const SizedBox(height: 24),
+
+                  // Deskripsi
+                  Text(
+                    widget.event.deskripsi,
+                    style: TextStyle(
+                      color: Colors.grey[300],
+                      fontSize: 16,
+                      height: 1.6,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Action Buttons
                   if (!widget.hasEnded)
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue[600],
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: _accentBlue,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -248,66 +243,77 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                       ),
                     ),
-                  if (widget.hasEnded)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Text(
-                        "Acara ini telah selesai. Terima kasih atas ketertarikannya!",
-                        style: TextStyle(
-                          color: Colors.redAccent,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-
-                  const SizedBox(height: 8),
-                  Text(
-                    "Pembuat acara: ${widget.event.username ?? 'Anonymous'}",
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
-                  ),
 
                   if (widget.isOwnerOrAdmin)
                     Padding(
-                      padding: const EdgeInsets.only(top: 16),
+                      padding: const EdgeInsets.only(top: 20),
                       child: Row(
                         children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[600],
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EventEditPage(event: widget.event),
+                                  ),
+                                );
+
+                                if (result == true && context.mounted) {
+                                  Navigator.pop(context, true);
+                                }
+                              },
+                              icon: const Icon(Icons.edit, size: 18),
+                              label: const Text("Edit"),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(color: Colors.white54),
+                              ),
                             ),
-                            onPressed: () async {
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      EventEditPage(event: widget.event),
-                                ),
-                              );
-                              if (mounted) {
-                                Navigator.pop(context);
-                              }
-                            },
-                            child: const Text("Edit Event"),
                           ),
                           const SizedBox(width: 12),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red[600],
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () =>
+                                  _showDeleteConfirmation(context, request),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red[700],
+                              ),
+                              icon: const Icon(
+                                Icons.delete,
+                                size: 18,
+                                color: Colors.white,
+                              ),
+                              label: const Text(
+                                "Delete",
+                                style: TextStyle(color: Colors.white),
+                              ),
                             ),
-                            onPressed: () {
-                              _showDeleteConfirmation(context, request);
-                            },
-                            child: const Text("Hapus Event"),
                           ),
                         ],
                       ),
                     ),
+
+                  const SizedBox(height: 50),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text, Color color) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: color),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(text, style: TextStyle(color: color, fontSize: 15)),
+        ),
+      ],
     );
   }
 }

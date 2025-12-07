@@ -5,7 +5,6 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/screens/menu.dart';
 import 'package:sporra_mobile/authentication/user_provider.dart';
-import 'package:sporra_mobile/event/screens/event_home.dart';
 
 class LeftDrawer extends StatefulWidget {
   const LeftDrawer({super.key});
@@ -79,7 +78,9 @@ class _LeftDrawerState extends State<LeftDrawer> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const EventHomePage()),
+                MaterialPageRoute(
+                  builder: (context) => const MainMenu(initialIndex: 1),
+                ),
               );
             },
           ),
@@ -117,7 +118,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 if (context.mounted) {
                   if (response['status']) {
                     String uname = response["username"];
-                    
+
                     // FIXED: Panggil logout pada UserProvider untuk membersihkan state global
                     context.read<UserProvider>().logout();
 

@@ -45,14 +45,11 @@ class _EventFormPageState extends State<EventFormPage> {
       "November",
       "Desember",
     ];
-
     String day = date.day.toString();
     String month = bulanIndo[date.month];
     String year = date.year.toString();
-
     String hour = time.hour.toString().padLeft(2, "0");
     String minute = time.minute.toString().padLeft(2, "0");
-
     return "$day $month $year $hour.$minute";
   }
 
@@ -70,39 +67,38 @@ class _EventFormPageState extends State<EventFormPage> {
         child: child!,
       ),
     );
-
-    if (pickedDate == null) return;
-
-    TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-      builder: (context, child) => Theme(
-        data: ThemeData.dark().copyWith(
-          colorScheme: const ColorScheme.dark(primary: Colors.blue),
+    if (pickedDate != null) {
+      // ignore: use_build_context_synchronously
+      TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+        builder: (context, child) => Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(primary: Colors.blue),
+          ),
+          child: child!,
         ),
-        child: child!,
-      ),
-    );
-
-    if (pickedTime == null) return;
-
-    setState(() {
-      _date = _formatIndoDate(pickedDate, pickedTime);
-    });
+      );
+      if (pickedTime != null) {
+        setState(() {
+          _date = _formatIndoDate(pickedDate, pickedTime);
+        });
+      }
+    }
   }
 
   Future<void> _submitEvent(CookieRequest request) async {
-    final response = await request
-        .post("http://127.0.0.1:8000/event/create-event-flutter/", {
-          "judul": _judul,
-          "deskripsi": _deskripsi,
-          "kategori": _kategori,
-          "lokasi": _lokasi,
-          "date": _date,
-        });
-
+    final response = await request.post(
+      "https://afero-aqil-sporra.pbp.cs.ui.ac.id/event/create-event-flutter/",
+      {
+        "judul": _judul,
+        "deskripsi": _deskripsi,
+        "kategori": _kategori,
+        "lokasi": _lokasi,
+        "date": _date,
+      },
+    );
     if (!mounted) return;
-
     if (response["status"] == "error") {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -110,14 +106,12 @@ class _EventFormPageState extends State<EventFormPage> {
           backgroundColor: Colors.red,
         ),
       );
-      return;
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Acara berhasil dibuat!")));
+      Navigator.pop(context, true);
     }
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Acara berhasil dibuat!")));
-
-    Navigator.pop(context);
   }
 
   @override
@@ -127,204 +121,158 @@ class _EventFormPageState extends State<EventFormPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
-        title: const Text("SPORRA"),
+        title: const Text("Create Event"),
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        // TOMBOL BACK CUSTOM (Lingkaran)
+        leading: IconButton(
+          icon: const CircleAvatar(
+            backgroundColor: Colors.black54,
+            child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Back
-              GestureDetector(
-                onTap: () => Navigator.pop(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1F2937),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white24),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                      SizedBox(width: 6),
-                      Text(
-                        "Kembali",
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // HAPUS TOMBOL "KEMBALI" MANUAL DI SINI
+            Card(
+              elevation: 12,
+              color: const Color(0xFF1F2937),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Details",
                         style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
                           color: Colors.white,
-                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      _buildInputField(
+                        label: "Judul",
+                        onSaved: (v) => _judul = v!,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInputField(
+                        label: "Deskripsi",
+                        maxLines: 3,
+                        onSaved: (v) => _deskripsi = v!,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInputField(
+                        label: "Lokasi",
+                        onSaved: (v) => _lokasi = v!,
+                      ),
+
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Kategori",
+                        style: TextStyle(
+                          color: Color(0xFFD1D5DB),
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF374151),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            dropdownColor: const Color(0xFF374151),
+                            value: _kategori,
+                            iconEnabledColor: Colors.white,
+                            items: _categories
+                                .map(
+                                  (c) => DropdownMenuItem(
+                                    value: c,
+                                    child: Text(
+                                      c,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (v) => setState(() => _kategori = v!),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Waktu",
+                        style: TextStyle(
+                          color: Color(0xFFD1D5DB),
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: _pickDate,
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF374151),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            _date.isEmpty ? "Pilih Tanggal & Jam" : _date,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              _formKey.currentState!.save();
+                              _submitEvent(request);
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF2563EB),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text(
+                            "Simpan",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-
-              Card(
-                elevation: 12,
-                color: const Color(0xFF1F2937),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(28.0),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Tambahkan Acara Baru!",
-                          style: TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        const Text(
-                          "Ayo buat acara olahragamu",
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                        const SizedBox(height: 25),
-
-                        _buildInputField(
-                          label: "Judul",
-                          onSaved: (v) => _judul = v!,
-                        ),
-                        const SizedBox(height: 20),
-
-                        _buildInputField(
-                          label: "Deskripsi",
-                          maxLines: 4,
-                          onSaved: (v) => _deskripsi = v!,
-                        ),
-                        const SizedBox(height: 20),
-
-                        _buildInputField(
-                          label: "Lokasi",
-                          onSaved: (v) => _lokasi = v!,
-                        ),
-                        const SizedBox(height: 20),
-
-                        Text(
-                          "Kategori",
-                          style: TextStyle(
-                            color: const Color(0xFFD1D5DB),
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF374151),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.white24),
-                          ),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              isExpanded: true,
-                              dropdownColor: const Color(0xFF374151),
-                              value: _kategori,
-                              iconEnabledColor: Colors.white,
-                              items: _categories.map((category) {
-                                return DropdownMenuItem(
-                                  value: category,
-                                  child: Text(
-                                    category,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                );
-                              }).toList(),
-                              onChanged: (value) {
-                                setState(() => _kategori = value!);
-                              },
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-
-                        Text(
-                          "Tanggal & Waktu",
-                          style: TextStyle(
-                            color: const Color(0xFFD1D5DB),
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-
-                        GestureDetector(
-                          onTap: _pickDate,
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF374151),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: Colors.white24),
-                            ),
-                            child: Text(
-                              _date.isEmpty ? "Pilih tanggal" : _date,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 30),
-
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                _formKey.currentState!.save();
-                                await _submitEvent(request);
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF2563EB),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: const Text(
-                              "Tambah Acara",
-                              style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -349,17 +297,9 @@ class _EventFormPageState extends State<EventFormPage> {
           decoration: InputDecoration(
             filled: true,
             fillColor: const Color(0xFF374151),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide.none,
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          validator: (value) =>
-              value == null || value.isEmpty ? "Tidak boleh kosong" : null,
+          validator: (v) => v!.isEmpty ? "Required" : null,
           onSaved: onSaved,
         ),
       ],

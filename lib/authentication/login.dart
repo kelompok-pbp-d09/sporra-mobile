@@ -37,15 +37,15 @@ class _LoginPageState extends State<LoginPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo
-              Image.asset(
-                'assets/images/logotxt.png',
-                height: 200,
-                width: 200,
-              ),
+              Image.asset('assets/images/logotxt.png', height: 200, width: 200),
               const SizedBox(height: 20),
               const Text(
                 'Login',
-                style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold, color: Colors.white),
+                style: TextStyle(
+                  fontSize: 24.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(height: 20),
 
@@ -106,9 +106,13 @@ class _LoginPageState extends State<LoginPage> {
                             String password = _passwordController.text;
 
                             if (username.isEmpty || password.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                                content: Text("Username and password cannot be empty"),
-                              ));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "Username and password cannot be empty",
+                                  ),
+                                ),
+                              );
                               return;
                             }
 
@@ -120,32 +124,40 @@ class _LoginPageState extends State<LoginPage> {
                             if (request.loggedIn) {
                               String message = response['message'];
                               String uname = response['username'];
-                              
-                              bool isSuperuser = response['is_superuser'] == true;
+
+                              bool isSuperuser =
+                                  response['is_superuser'] == true;
                               bool isStaff = response['is_staff'] == true;
                               bool isAdmin = isSuperuser || isStaff;
-                              
+
                               // TAMBAHAN: Ambil URL foto profil dari response
                               // Sesuaikan key dengan JSON dari Django ('profile_picture' atau 'pfp')
-                              String pfp = response['profile_picture'] ?? response['pfp'] ?? "";
+                              String pfp =
+                                  response['profile_picture'] ??
+                                  response['pfp'] ??
+                                  "";
 
                               if (context.mounted) {
                                 // Update Provider dengan data lengkap
                                 context.read<UserProvider>().setUser(
-                                  uname, 
+                                  uname,
                                   isAdmin: isAdmin,
-                                  profilePicture: pfp // Kirim ke provider
+                                  profilePicture: pfp, // Kirim ke provider
                                 );
 
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const MainMenu()),
+                                  MaterialPageRoute(
+                                    builder: (context) => const MainMenu(),
+                                  ),
                                 );
-                                
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                  content: Text("$message Welcome"),
-                                  backgroundColor: Colors.green,
-                                ));
+
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text("$message Welcome"),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
                               }
                             } else {
                               if (context.mounted) {
@@ -173,29 +185,40 @@ class _LoginPageState extends State<LoginPage> {
                               borderRadius: BorderRadius.circular(12.0),
                             ),
                           ),
-                          child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Sign In',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
-                        
-                         // ... Register Link code ...
-                         const SizedBox(height: 24),
-                         Row(
+
+                        // ... Register Link code ...
+                        const SizedBox(height: 24),
+                        Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("Don't have an account? ", style: TextStyle(color: _textSecondary)),
+                            Text(
+                              "Don't have an account? ",
+                              style: TextStyle(color: _textSecondary),
+                            ),
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const RegisterPage()),
+                                  MaterialPageRoute(
+                                    builder: (context) => const RegisterPage(),
+                                  ),
                                 );
                               },
                               child: Text(
                                 "Register",
-                                style: TextStyle(color: _accentBlue, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: _accentBlue,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            )
+                            ),
                           ],
-                         )
+                        ),
                       ],
                     ),
                   ),
@@ -228,7 +251,10 @@ class _LoginPageState extends State<LoginPage> {
       fillColor: _inputFill,
       hintText: hint,
       hintStyle: TextStyle(color: Colors.grey[500]),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16.0,
+        vertical: 14.0,
+      ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12.0),
         borderSide: BorderSide.none,
