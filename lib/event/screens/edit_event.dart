@@ -147,7 +147,6 @@ class _EventEditPageState extends State<EventEditPage> {
         title: const Text("Edit Event"),
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
-        // TOMBOL BACK CUSTOM (Lingkaran)
         leading: IconButton(
           icon: const CircleAvatar(
             backgroundColor: Colors.black54,

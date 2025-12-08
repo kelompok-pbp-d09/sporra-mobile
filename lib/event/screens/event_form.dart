@@ -68,7 +68,6 @@ class _EventFormPageState extends State<EventFormPage> {
       ),
     );
     if (pickedDate != null) {
-      // ignore: use_build_context_synchronously
       TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
@@ -125,7 +124,6 @@ class _EventFormPageState extends State<EventFormPage> {
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
         elevation: 0,
-        // TOMBOL BACK CUSTOM (Lingkaran)
         leading: IconButton(
           icon: const CircleAvatar(
             backgroundColor: Colors.black54,
@@ -139,7 +137,6 @@ class _EventFormPageState extends State<EventFormPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HAPUS TOMBOL "KEMBALI" MANUAL DI SINI
             Card(
               elevation: 12,
               color: const Color(0xFF1F2937),

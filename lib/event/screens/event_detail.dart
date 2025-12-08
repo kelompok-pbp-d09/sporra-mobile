@@ -21,7 +21,6 @@ class EventDetailPage extends StatefulWidget {
 }
 
 class _EventDetailPageState extends State<EventDetailPage> {
-  // --- WARNA TEMA ---
   final Color _bgPrimary = const Color(0xFF111827);
   final Color _cardBg = const Color(0xFF1F2937);
   final Color _accentBlue = const Color(0xFF2563EB);
@@ -96,12 +95,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
       backgroundColor: _bgPrimary,
       body: CustomScrollView(
         slivers: [
-          // --- 1. HEADER KEREN (SliverAppBar) ---
           SliverAppBar(
             expandedHeight: 200.0,
             pinned: true,
             backgroundColor: _bgPrimary,
-            // TOMBOL BACK BULAT SEPERTI NEWS DETAIL
             leading: IconButton(
               icon: const CircleAvatar(
                 backgroundColor: Colors.black54,
@@ -133,14 +130,13 @@ class _EventDetailPageState extends State<EventDetailPage> {
             ),
           ),
 
-          // --- 2. KONTEN DETAIL ---
+          // Detail
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Judul
                   Text(
                     widget.event.judul,
                     style: const TextStyle(
@@ -152,7 +148,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Kategori Pill
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -174,7 +169,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Info Lokasi & Waktu
                   _buildInfoRow(
                     Icons.location_on,
                     widget.event.lokasi,
@@ -208,7 +202,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
                   Divider(color: Colors.grey[800]),
                   const SizedBox(height: 24),
 
-                  // Deskripsi
                   Text(
                     widget.event.deskripsi,
                     style: TextStyle(
@@ -220,7 +213,6 @@ class _EventDetailPageState extends State<EventDetailPage> {
 
                   const SizedBox(height: 24),
 
-                  // Action Buttons
                   if (!widget.hasEnded)
                     SizedBox(
                       width: double.infinity,
