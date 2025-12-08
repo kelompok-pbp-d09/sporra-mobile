@@ -1,5 +1,4 @@
 // ignore_for_file: deprecated_member_use
-// TODO: Connect forum API ke news
 
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/news/models/news_entry.dart';
@@ -116,10 +115,8 @@ class NewsDetailPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: _accentBlue.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
-        // ignore: deprecated_member_use
         border: Border.all(color: _accentBlue.withOpacity(0.5)),
       ),
       child: Text(

@@ -154,13 +154,13 @@ class NewsEntryCard extends StatelessWidget {
               // --- GAMBAR ---
               if (news.fields.thumbnail != null && news.fields.thumbnail.trim().isNotEmpty)
                 Container(
-                   constraints: const BoxConstraints(maxHeight: 500),
-                   width: double.infinity,
-                   child: Image.network(
-                     'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
-                     fit: BoxFit.cover,
-                     errorBuilder: (context, error, stackTrace) => Container(height: 100, color: Colors.grey[800]),
-                   ),
+                    constraints: const BoxConstraints(maxHeight: 500),
+                    width: double.infinity,
+                    child: Image.network(
+                      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(height: 100, color: Colors.grey[800]),
+                    ),
                 ),
 
               // --- FOOTER ---
@@ -181,22 +181,10 @@ class NewsEntryCard extends StatelessWidget {
                     ),
                     _buildActionPill(
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Fitur Komentar segera hadir!")),
-                        );
-                      },
-                      children: [
-                        const Icon(Icons.mode_comment_outlined, size: 18, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        const Text("Comments", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    _buildActionPill(
-                      onTap: () {
                           Share.share(
-                           "Read interesting sport news on Sporra!\n\n${news.fields.title}\nOleh: ${news.fields.author}\n\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
-                           subject: news.fields.title,
-                         );
+                            "Read interesting sport news on Sporra!\n\n${news.fields.title}\nOleh: ${news.fields.author}\n\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
+                            subject: news.fields.title,
+                          );
                       },
                       children: [
                         const Icon(Icons.share_outlined, size: 18, color: Colors.grey),

@@ -56,14 +56,14 @@ class _ForumFormState extends State<ForumForm> {
         // fallback
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal menambah komentar.")),
+          const SnackBar(content: Text("Failed to add comment.")),
         );
       }
     } catch (e) {
       // Bisa juga dapat 403 ketika belum login
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Terjadi kesalahan: ${e.toString()}")),
+        SnackBar(content: Text("An error occured: ${e.toString()}")),
       );
     } finally {
       if (mounted) setState(() => _isSending = false);
