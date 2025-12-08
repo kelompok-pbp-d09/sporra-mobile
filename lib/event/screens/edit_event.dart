@@ -41,7 +41,7 @@ class _EventEditPageState extends State<EventEditPage> {
 
     _kategori = _categories.contains(widget.event.kategori.toLowerCase())
         ? widget.event.kategori.toLowerCase()
-        : 'lainnya';
+        : 'others';
 
     _date = widget.event.dateFormatted.replaceAll(',', '');
   }
@@ -105,7 +105,7 @@ class _EventEditPageState extends State<EventEditPage> {
 
   Future<void> _submitEdit(CookieRequest request) async {
     final url =
-        "http://127.0.0.1:8000/event/edit-event-flutter/${widget.event.id}/";
+        "https://afero-aqil-sporra.pbp.cs.ui.ac.id/event/edit-event-flutter/${widget.event.id}/";
 
     final response = await request.post(url, {
       "judul": _judul,
@@ -134,8 +134,7 @@ class _EventEditPageState extends State<EventEditPage> {
       ),
     );
 
-    Navigator.pop(context);
-    Navigator.pop(context);
+    Navigator.pop(context, true);
   }
 
   @override
@@ -145,9 +144,17 @@ class _EventEditPageState extends State<EventEditPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
-        title: const Text("Edit Event"), // Judul Beda
+        title: const Text("Edit Event"),
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
+        // TOMBOL BACK CUSTOM (Lingkaran)
+        leading: IconButton(
+          icon: const CircleAvatar(
+            backgroundColor: Colors.black54,
+            child: Icon(Icons.arrow_back, color: Colors.white, size: 20),
+          ),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -171,7 +178,6 @@ class _EventEditPageState extends State<EventEditPage> {
                       onSaved: (v) => _judul = v!,
                     ),
                     const SizedBox(height: 20),
-
                     _buildInputField(
                       label: "Deskripsi",
                       initialValue: _deskripsi,
@@ -179,7 +185,6 @@ class _EventEditPageState extends State<EventEditPage> {
                       onSaved: (v) => _deskripsi = v!,
                     ),
                     const SizedBox(height: 20),
-
                     _buildInputField(
                       label: "Lokasi",
                       initialValue: _lokasi,
@@ -264,6 +269,7 @@ class _EventEditPageState extends State<EventEditPage> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),

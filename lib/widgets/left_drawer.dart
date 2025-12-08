@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:sporra_mobile/Ticketing/Screens/Tickets.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/screens/menu.dart';
+import 'package:sporra_mobile/authentication/user_provider.dart';
 
 class LeftDrawer extends StatefulWidget {
   const LeftDrawer({super.key});
@@ -51,11 +53,11 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
           // --- MENU ITEMS ---
 
-          // 2. News List
+          // 2. News Feed
           ListTile(
             leading: const Icon(Icons.newspaper, color: Colors.white),
             title: const Text(
-              'News List',
+              'News Feed',
               style: TextStyle(color: Colors.white),
             ),
             onTap: () {
@@ -74,10 +76,11 @@ class _LeftDrawerState extends State<LeftDrawer> {
             ),
             title: const Text('Events', style: TextStyle(color: Colors.white)),
             onTap: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Fitur Events segera hadir!")),
-                //TODO: add redirect ke event
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MainMenu(initialIndex: 1),
+                ),
               );
             },
           ),
@@ -88,11 +91,10 @@ class _LeftDrawerState extends State<LeftDrawer> {
             ),
             title: const Text('Tickets', style: TextStyle(color: Colors.white)),
             onTap: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Fitur Tiket segera hadir!")),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AllTicketsPage()),
               );
-              //TODO: add redirect ke ticket
             },
           ),
 
@@ -107,17 +109,23 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 style: TextStyle(color: Colors.redAccent),
               ),
               onTap: () async {
+                // FIXED: URL disesuaikan dengan pola login (/profile_user/auth/...)
                 final response = await request.logout(
-                  "http://localhost:8000/profile_user/auth/logout/",
+                  "https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/auth/logout/",
                 );
 
                 String message = response["message"];
                 if (context.mounted) {
                   if (response['status']) {
                     String uname = response["username"];
+
+                    // FIXED: Panggil logout pada UserProvider untuk membersihkan state global
+                    context.read<UserProvider>().logout();
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text("$message See you again, $uname."),
+                        backgroundColor: Colors.green,
                       ),
                     );
 

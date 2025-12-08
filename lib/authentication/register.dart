@@ -157,7 +157,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
                                       try {
                                         final response = await request.post(
-                                          "http://localhost:8000/profile_user/auth/register/",
+                                          "https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/auth/register/",
                                           {
                                             "username": username,
                                             "full_name": fullName,

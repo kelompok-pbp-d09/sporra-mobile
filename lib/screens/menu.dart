@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/news/screens/news_entry_list.dart';
+import 'package:sporra_mobile/news/screens/news_form.dart';
+import 'package:sporra_mobile/event/screens/event_home.dart';
+import 'package:sporra_mobile/event/screens/event_form.dart';
 import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/widgets/profile_avatar.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 
 class MainMenu extends StatefulWidget {
-  const MainMenu({super.key});
+  final int initialIndex;
+
+  const MainMenu({super.key, this.initialIndex = 0});
 
   @override
   State<MainMenu> createState() => _MainMenuState();
@@ -15,21 +20,26 @@ class MainMenu extends StatefulWidget {
 class _MainMenuState extends State<MainMenu> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const NewsEntryListPage(isEmbedded: true),
-    const Center(
-      child: Text(
-        "Event Page (Coming Soon)",
-        style: TextStyle(color: Colors.white),
+  final GlobalKey<EventHomePageState> _eventHomeKey =
+      GlobalKey<EventHomePageState>();
+
+  late List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+    _pages = [
+      const NewsEntryListPage(isEmbedded: true),
+      EventHomePage(key: _eventHomeKey, isEmbedded: true),
+      const Center(
+        child: Text(
+          "Tickets Page (Coming Soon)",
+          style: TextStyle(color: Colors.white),
+        ),
       ),
-    ),
-    const Center(
-      child: Text(
-        "Tickets Page (Coming Soon)",
-        style: TextStyle(color: Colors.white),
-      ),
-    ),
-  ];
+    ];
+  }
 
   final List<String> _titles = ["News Feed", "Events", "Tickets"];
 
@@ -41,7 +51,6 @@ class _MainMenuState extends State<MainMenu> {
 
   @override
   Widget build(BuildContext context) {
-
     final request = context.watch<CookieRequest>();
 
     return Scaffold(
@@ -55,34 +64,41 @@ class _MainMenuState extends State<MainMenu> {
           _titles[_selectedIndex],
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        actions: const [ProfileAvatarButton()],
+        actions: [
+          const ProfileAvatarButton(), // Pindahkan const ke sini (opsional) atau hapus saja
+        ],
       ),
 
       drawer: const LeftDrawer(),
 
       body: IndexedStack(index: _selectedIndex, children: _pages),
 
-      floatingActionButton: (_selectedIndex == 0 && request.loggedIn)
+      floatingActionButton:
+          (request.loggedIn && (_selectedIndex == 0 || _selectedIndex == 1))
           ? FloatingActionButton(
-              onPressed: () {
-                // TODO: Ganti dengan Navigasi ke Form News yang asli
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => const NewsFormPage()),
-                // );
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      "Fitur Tambah Berita (Hanya untuk User Login)",
+              onPressed: () async {
+                if (_selectedIndex == 0) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NewsFormPage(),
                     ),
-                    backgroundColor: Colors.blueAccent,
-                  ),
-                );
+                  );
+                } else if (_selectedIndex == 1) {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const EventFormPage(),
+                    ),
+                  );
+                  if (result == true) {
+                    _eventHomeKey.currentState?.loadEvents();
+                  }
+                }
               },
               backgroundColor: Colors.blue[700],
               foregroundColor: Colors.white,
-              tooltip: 'Add News',
+              tooltip: _selectedIndex == 0 ? 'Add News' : 'Add Event',
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50),
               ),

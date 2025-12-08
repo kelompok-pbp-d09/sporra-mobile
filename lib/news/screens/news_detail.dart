@@ -3,13 +3,16 @@
 
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/news/models/news_entry.dart';
-import 'package:intl/intl.dart'; 
-import 'package:share_plus/share_plus.dart'; 
+import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:sporra_mobile/forum/widgets/forum_entry_card.dart';
+import 'package:sporra_mobile/forum/screens/forum_form.dart';
 
 class NewsDetailPage extends StatelessWidget {
   final NewsEntry news;
 
-  const NewsDetailPage({super.key, required this.news});
+  NewsDetailPage({super.key, required this.news});
+  final forumKey = GlobalKey<ForumEntryCardState>();
 
   // --- PALET WARNA ---
   final Color _bgPrimary = const Color(0xFF111827);
@@ -20,7 +23,9 @@ class NewsDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String formattedDate = DateFormat('dd MMM yyyy, HH:mm').format(news.fields.createdAt);
+    final String formattedDate = DateFormat(
+      'dd MMM yyyy, HH:mm',
+    ).format(news.fields.createdAt);
 
     return Scaffold(
       backgroundColor: _bgPrimary,
@@ -43,7 +48,7 @@ class NewsDetailPage extends StatelessWidget {
                     news.fields.title,
                     style: TextStyle(
                       color: _textPrimary,
-                      fontSize: 28, 
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       height: 1.2,
                     ),
@@ -69,121 +74,42 @@ class NewsDetailPage extends StatelessWidget {
             ),
           ),
 
-          // 3. HEADER FORUM / KOMENTAR (SliverToBoxAdapter)
+          // 3. FORUM SECTION FULL
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Diskusi (0)", // Nanti ganti dengan jumlah komentar real-time
-                    style: TextStyle(
-                      color: _textPrimary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  // Tombol Filter ala Reddit (Best, New, Top)
-                  DropdownButton<String>(
-                    value: "Best",
-                    dropdownColor: _cardBg,
-                    underline: Container(),
-                    icon: Icon(Icons.sort, color: _textSecondary),
-                    style: TextStyle(color: _textSecondary),
-                    items: ["Best", "New", "Top"].map((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                    onChanged: (_) {}, // TODO: Implement sort logic
-                  ),
-                ],
-              ),
+            child: ForumEntryCard(
+              key: forumKey,
+              articleId: news.pk,
+              cardBg: _cardBg,
+              accentBlue: _accentBlue,
+              textPrimary: _textPrimary,
             ),
           ),
 
-          _buildCommentSection(),
+          // 4. FORM TAMBAH KOMENTAR
+          SliverToBoxAdapter(
+            child: ForumForm(
+              articleId: news.pk,
+              onSuccess: () {
+                forumKey.currentState?.refresh();
+              },
+            ),
+          ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
-      
+
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-            Share.share(
-              "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttp://localhost:8000/news/",
-              subject: news.fields.title,
-            );
+          Share.share(
+            "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
+            subject: news.fields.title,
+          );
         },
         backgroundColor: _accentBlue,
         child: const Icon(Icons.share, color: Colors.white),
       ),
     );
-  }
-
-  // --- WIDGET BUILDERS ---
-
-  Widget _buildCommentSection() {
-    // TODO: Nanti ganti ini dengan data real dari API Forum
-    // Jika komentar kosong, tampilkan placeholder. Jika ada, tampilkan list.
-    bool hasComments = false; 
-
-    if (!hasComments) {
-      return SliverToBoxAdapter(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          padding: const EdgeInsets.all(30),
-          decoration: BoxDecoration(
-            color: _cardBg,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey[800]!),
-          ),
-          child: Column(
-            children: [
-              Icon(Icons.chat_bubble_outline, size: 48, color: Colors.grey[600]),
-              const SizedBox(height: 16),
-              const Text(
-                "Belum ada diskusi",
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Jadilah yang pertama memulai diskusi menarik ini!",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[500]),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {}, // TODO: Buka form tambah komentar
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentBlue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                ),
-                child: const Text("Mulai Diskusi"),
-              )
-            ],
-          ),
-        ),
-      );
-    } 
-    
-    // Contoh jika nanti sudah ada data (SliverList sangat efisien untuk list panjang)
-    /*
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          return CommentCardWidget(data: comments[index]); // Widget komentar Reddit-style
-        },
-        childCount: comments.length,
-      ),
-    );
-    */
-    
-    // Return empty sliver for now to satisfy type check
-    return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 
   Widget _buildCategoryPill() {
@@ -219,8 +145,8 @@ class NewsDetailPage extends StatelessWidget {
               : null,
           child: (news.fields.authorPfp.isEmpty)
               ? Text(
-                  news.fields.author.isNotEmpty 
-                      ? news.fields.author[0].toUpperCase() 
+                  news.fields.author.isNotEmpty
+                      ? news.fields.author[0].toUpperCase()
                       : "A",
                   style: const TextStyle(
                     color: Colors.white,
@@ -245,10 +171,7 @@ class NewsDetailPage extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               formattedDate,
-              style: TextStyle(
-                color: _textSecondary,
-                fontSize: 13,
-              ),
+              style: TextStyle(color: _textSecondary, fontSize: 13),
             ),
           ],
         ),
@@ -274,11 +197,13 @@ class NewsDetailPage extends StatelessWidget {
           children: [
             news.fields.thumbnail.isNotEmpty
                 ? Image.network(
-                    'http://localhost:8000/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[900],
-                      child: const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+                      child: const Center(
+                        child: Icon(Icons.broken_image, color: Colors.grey),
+                      ),
                     ),
                   )
                 : Container(color: _accentBlue),
@@ -287,10 +212,7 @@ class NewsDetailPage extends StatelessWidget {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Color(0xAA111827),
-                  ],
+                  colors: [Colors.transparent, Color(0xAA111827)],
                   stops: [0.6, 1.0],
                 ),
               ),
