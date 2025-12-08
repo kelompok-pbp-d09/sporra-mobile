@@ -21,7 +21,6 @@ class EventDetailPage extends StatefulWidget {
 }
 
 class _EventDetailPageState extends State<EventDetailPage> {
-  // --- WARNA TEMA ---
   final Color _bgPrimary = const Color(0xFF111827);
   final Color _cardBg = const Color(0xFF1F2937);
   final Color _accentBlue = const Color(0xFF2563EB);
@@ -96,12 +95,10 @@ class _EventDetailPageState extends State<EventDetailPage> {
       backgroundColor: _bgPrimary,
       body: CustomScrollView(
         slivers: [
-          // --- 1. HEADER KEREN (SliverAppBar) ---
           SliverAppBar(
             expandedHeight: 200.0,
             pinned: true,
             backgroundColor: _bgPrimary,
-            // TOMBOL BACK BULAT SEPERTI NEWS DETAIL
             leading: IconButton(
               icon: const CircleAvatar(
                 backgroundColor: Colors.black54,
@@ -133,7 +130,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
             ),
           ),
 
-          // --- 2. KONTEN DETAIL ---
+          // Detail
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(20.0),

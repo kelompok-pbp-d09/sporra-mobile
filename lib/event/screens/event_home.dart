@@ -503,9 +503,10 @@ class EventHomePageState extends State<EventHomePage> {
           foregroundColor: Colors.white,
           elevation: 0,
         ),
-        drawer: const LeftDrawer(), // HEADER TETAP DRAWER SAAT STANDALONE
+
+        drawer: const LeftDrawer(),
+
         body: bodyContent,
-        // --- 3. FLOATING ACTION BUTTON (Untuk Standalone) ---
         floatingActionButton: request.loggedIn
             ? FloatingActionButton(
                 onPressed: () async {
