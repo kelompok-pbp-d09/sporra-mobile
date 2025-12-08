@@ -16,7 +16,6 @@ class EventHomePage extends StatefulWidget {
 }
 
 class EventHomePageState extends State<EventHomePage> {
-  // Warna Tema (Samakan dengan News)
   final Color accentBlue = const Color(0xFF2563EB);
   final Color bgDark = const Color(0xFF111827);
   final Color cardDark = const Color(0xFF1F2937);
@@ -114,7 +113,6 @@ class EventHomePageState extends State<EventHomePage> {
     setState(() {
       currentPage = page;
     });
-    // Scroll ke atas saat ganti halaman
     if (mounted) {
       Future.delayed(const Duration(milliseconds: 100), () {
         Scrollable.ensureVisible(
@@ -150,9 +148,7 @@ class EventHomePageState extends State<EventHomePage> {
         );
         loadEvents();
       }
-    } catch (e) {
-      // Handle error
-    }
+    } catch (e) {}
   }
 
   void showDeleteDialog(Event event) {
@@ -186,7 +182,6 @@ class EventHomePageState extends State<EventHomePage> {
     );
   }
 
-  // --- WIDGET TOGGLE YANG BARU DAN LEBIH BAGUS ---
   Widget buildEventToggle() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -245,7 +240,6 @@ class EventHomePageState extends State<EventHomePage> {
     );
   }
 
-  // --- WIDGET FILTER YANG BARU (Gaya News) ---
   Widget buildCategoryFilters() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -313,7 +307,6 @@ class EventHomePageState extends State<EventHomePage> {
     );
   }
 
-  // --- WIDGET PAGINATION (ANDA MINTA DIPERTAHANKAN) ---
   Widget buildPaginationControls(int totalPages) {
     if (totalPages <= 1) return const SizedBox.shrink();
 
@@ -421,12 +414,10 @@ class EventHomePageState extends State<EventHomePage> {
               children: [
                 const SizedBox(height: 16),
 
-                // --- 1. TOGGLE BARU ---
                 buildEventToggle(),
 
                 const SizedBox(height: 16),
 
-                // --- 2. FILTER BARU ---
                 buildCategoryFilters(),
 
                 const SizedBox(height: 8),
@@ -482,7 +473,6 @@ class EventHomePageState extends State<EventHomePage> {
                   ),
                 ],
 
-                // --- PAGINASI DIPERTAHANKAN ---
                 buildPaginationControls(totalPages),
 
                 const SizedBox(height: 20),
