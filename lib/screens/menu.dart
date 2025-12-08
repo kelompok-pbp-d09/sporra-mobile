@@ -7,6 +7,8 @@ import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/widgets/profile_avatar.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+import 'package:sporra_mobile/Ticketing/Screens/tickets.dart';
+import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart'; 
 
 class MainMenu extends StatefulWidget {
   final int initialIndex;
@@ -23,6 +25,9 @@ class _MainMenuState extends State<MainMenu> {
   final GlobalKey<EventHomePageState> _eventHomeKey =
       GlobalKey<EventHomePageState>();
 
+  final GlobalKey<AllTicketsPageState> _ticketKey =
+      GlobalKey<AllTicketsPageState>();
+
   late List<Widget> _pages;
 
   @override
@@ -32,12 +37,7 @@ class _MainMenuState extends State<MainMenu> {
     _pages = [
       const NewsEntryListPage(isEmbedded: true),
       EventHomePage(key: _eventHomeKey, isEmbedded: true),
-      const Center(
-        child: Text(
-          "Tickets Page (Coming Soon)",
-          style: TextStyle(color: Colors.white),
-        ),
-      ),
+      AllTicketsPage(key: _ticketKey, isEmbedded: true),
     ];
   }
 
@@ -65,7 +65,29 @@ class _MainMenuState extends State<MainMenu> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          const ProfileAvatarButton(), // Pindahkan const ke sini (opsional) atau hapus saja
+          // LOGIKA KHUSUS TIKET: Tombol Refresh & MyBookings muncul di AppBar MainMenu
+          if (_selectedIndex == 2) ...[
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              tooltip: "Refresh Tickets",
+              onPressed: () {
+                // Panggil fungsi refresh di dalam AllTicketsPage
+                _ticketKey.currentState?.fetchAllData();
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.receipt_long),
+              tooltip: "My Bookings",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const MyBookingsPage()),
+                );
+              },
+            ),
+          ],
+          const ProfileAvatarButton(),
         ],
       ),
 
@@ -73,11 +95,12 @@ class _MainMenuState extends State<MainMenu> {
 
       body: IndexedStack(index: _selectedIndex, children: _pages),
 
-      floatingActionButton:
-          (request.loggedIn && (_selectedIndex == 0 || _selectedIndex == 1))
+      floatingActionButton: (request.loggedIn &&
+              (_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2))
           ? FloatingActionButton(
               onPressed: () async {
                 if (_selectedIndex == 0) {
+                  // === Logic News ===
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -85,6 +108,7 @@ class _MainMenuState extends State<MainMenu> {
                     ),
                   );
                 } else if (_selectedIndex == 1) {
+                  // === Logic Event ===
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -94,17 +118,25 @@ class _MainMenuState extends State<MainMenu> {
                   if (result == true) {
                     _eventHomeKey.currentState?.loadEvents();
                   }
+                } else if (_selectedIndex == 2) {
+                  // === Logic Ticket ===
+                  // Panggil dialog form tiket via key, BUKAN push page baru
+                  // Ini mencegah halaman bertumpuk
+                  _ticketKey.currentState?.showTicketFormDialog();
                 }
               },
-              backgroundColor: Colors.blue[700],
+              backgroundColor:
+                  _selectedIndex == 2 ? Colors.green[600] : Colors.blue[700],
               foregroundColor: Colors.white,
-              tooltip: _selectedIndex == 0 ? 'Add News' : 'Add Event',
+              tooltip: _selectedIndex == 2
+                  ? 'Add Ticket'
+                  : (_selectedIndex == 0 ? 'Add News' : 'Add Event'),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(50),
               ),
               child: const Icon(Icons.add, size: 28),
             )
-          : null, // Jika tidak memenuhi syarat, tombol hilang (null)
+          : null, // Jika tidak login, tombol hilang
 
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(

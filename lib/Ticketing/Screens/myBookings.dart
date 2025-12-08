@@ -13,7 +13,7 @@ class MyBookingsPage extends StatefulWidget {
 }
 
 class _MyBookingsPageState extends State<MyBookingsPage> {
-  final String baseUrl = "http://localhost:8000";
+  final String baseUrl = "https://afero-aqil-sporra.pbp.cs.ui.ac.id";
 
   List<Booking> _bookings = [];
   bool _isLoading = true;
