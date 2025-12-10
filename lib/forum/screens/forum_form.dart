@@ -1,9 +1,8 @@
-// lib/forum/forum_form.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-//TODO: add handling kalau user belom login
+import 'package:sporra_mobile/authentication/login.dart';
 
 class ForumForm extends StatefulWidget {
   final String articleId; // UUID string dari Article (sama dengan pk di URL)
@@ -26,6 +25,20 @@ class _ForumFormState extends State<ForumForm> {
   Future<void> _submitComment() async {
     final content = _controller.text.trim();
     if (content.isEmpty) return;
+
+    final req = context.read<CookieRequest>();
+
+    if (!req.loggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You must log in to comment.")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+      return;
+    }
 
     setState(() => _isSending = true);
 

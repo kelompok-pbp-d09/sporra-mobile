@@ -129,6 +129,10 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     final req = context.read<CookieRequest>();
 
     if (!req.loggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You must log in to vote.")),
+      );
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginPage()),
