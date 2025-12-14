@@ -5,6 +5,10 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 import 'package:sporra_mobile/forum/models/forum_entry.dart';
+import 'package:sporra_mobile/news/models/news_entry.dart';
+import 'package:sporra_mobile/news/screens/news_detail.dart';
+import 'package:sporra_mobile/forum/screens/forum_form.dart';
+
 
 typedef ForumRefresh = Future<void> Function();
 
@@ -30,6 +34,8 @@ class ForumEntryCard extends StatefulWidget {
 
 class ForumEntryCardState extends State<ForumEntryCard> {
   bool isLoading = true;
+  List<dynamic> topForums = [];
+  List<NewsEntry> hottestArticles = [];
   List<dynamic> comments = [];
   String sort = "Best";
 
@@ -42,16 +48,15 @@ class ForumEntryCardState extends State<ForumEntryCard> {
   Future<void> refresh() async => fetchForum();
 
   Future<void> fetchForum() async {
-    final request = context.read<CookieRequest>();
-    final data = await request.get("https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/${widget.articleId}/json/");
-    print("COOKIES USED => ${request.cookies}");
-    print("RAW COMMENTS FROM BACKEND => ${data['comments']}");
+    try {
+      final request = context.read<CookieRequest>();
+      final data = await request.get(
+          "https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/${widget.articleId}/json/"
+      );
 
-    // Parse ke model dulu
-    final forum = ForumEntry.fromJson(data);
+      final forum = ForumEntry.fromJson(data);
 
-    setState(() {
-      comments = forum.comments.map((c) => {
+      final safeComments = forum.comments.map((c) => {
         "id": c.id,
         "author": c.author,
         "content": c.content,
@@ -60,13 +65,34 @@ class ForumEntryCardState extends State<ForumEntryCard> {
         "user_vote": c.userVote,
         "can_modify": c.canModify,
       }).toList();
-      _applySorting();
-      isLoading = false;
-    });
 
-    print("COMMENTS AFTER PARSE => $comments");
-    print("FIRST can_modify => ${comments[0]["can_modify"]}");
+      final safeTopForums =
+          (data["top_forums"] as List?)
+              ?.where((f) => f != null && f["article"] != null)
+              .toList()
+              ?? [];
+
+      final safeHottest =
+          (data["hottest_articles"] as List?)
+              ?.whereType<Map<String, dynamic>>()
+              .map((e) => NewsEntry.fromJson(e))
+              .toList()
+              ?? [];
+
+      setState(() {
+        comments = safeComments;
+        topForums = safeTopForums;
+        hottestArticles = safeHottest;
+        _applySorting();
+        isLoading = false;
+      });
+    } catch (e, s) {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
+
 
 
   // SORTING
@@ -290,13 +316,27 @@ class ForumEntryCardState extends State<ForumEntryCard> {
                 itemCount: comments.length,
                 itemBuilder: (_, i) => _buildCommentCard(comments[i]),
               ),
+
+            // 🔥 FORM TAMBAH KOMENTAR
+            ForumForm(
+              articleId: widget.articleId,
+              onSuccess: () async {
+                await fetchForum();
+              },
+            ),
+
+            const SizedBox(height: 16),
+
+            _buildTopForums(),
+            _buildHottestArticles(),
           ],
         ),
       ),
     );
   }
 
-  // EMPTY STATE
+
+    // EMPTY STATE
   Widget _buildEmptyState() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal:
@@ -444,4 +484,144 @@ class ForumEntryCardState extends State<ForumEntryCard> {
       ),
     );
   }
+
+  Widget _buildTopForums() {
+    if (topForums.isEmpty) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Top Forum",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          ...List.generate(topForums.length, (i) {
+            final f = topForums[i];
+            final articleJson = f["article"];
+
+            if (articleJson is! Map<String, dynamic>) {
+              return const SizedBox();
+            }
+
+            final news = NewsEntry.fromJson(articleJson);
+
+
+            return InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NewsDetailPage(news: news),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "#${i + 1}",
+                      style: TextStyle(
+                        color: widget.accentBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            news.fields.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "${f["post_count"]} Komentar",
+                            style: TextStyle(
+                              color: Colors.grey[500],
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+
+
+
+  Widget _buildHottestArticles() {
+    if (hottestArticles.isEmpty) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Hot Articles",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          ...hottestArticles.map((news) {
+            return InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => NewsDetailPage(news: news),
+                  ),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Text(
+                  news.fields.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+
+
 }

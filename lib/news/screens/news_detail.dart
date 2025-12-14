@@ -84,16 +84,6 @@ class NewsDetailPage extends StatelessWidget {
             ),
           ),
 
-          // 4. FORM TAMBAH KOMENTAR
-          SliverToBoxAdapter(
-            child: ForumForm(
-              articleId: news.pk,
-              onSuccess: () {
-                forumKey.currentState?.refresh();
-              },
-            ),
-          ),
-
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
