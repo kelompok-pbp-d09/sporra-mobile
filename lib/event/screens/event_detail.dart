@@ -3,6 +3,7 @@ import 'package:sporra_mobile/event/models/event_entry.dart';
 import 'package:sporra_mobile/event/screens/edit_event.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:sporra_mobile/screens/menu.dart';
 
 class EventDetailPage extends StatefulWidget {
   final Event event;
@@ -224,7 +225,16 @@ class _EventDetailPageState extends State<EventDetailPage> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const MainMenu(initialIndex: 2),
+                            ),
+                            (route) => false,
+                          );
+                        },
                         child: const Text(
                           "🎟️ Join Now!",
                           style: TextStyle(
