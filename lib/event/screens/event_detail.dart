@@ -61,11 +61,11 @@ class _EventDetailPageState extends State<EventDetailPage> {
       builder: (context) => AlertDialog(
         backgroundColor: _cardBg,
         title: const Text(
-          'Hapus Event?',
+          'Delete Event?',
           style: TextStyle(color: Colors.white),
         ),
         content: const Text(
-          'Event akan dihapus permanen.',
+          'Event will be permanently deleted.',
           style: TextStyle(color: Colors.grey),
         ),
         actions: [
@@ -226,7 +226,7 @@ class _EventDetailPageState extends State<EventDetailPage> {
                         ),
                         onPressed: () {},
                         child: const Text(
-                          "🎟️ Join Sekarang!",
+                          "🎟️ Join Now!",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

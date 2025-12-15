@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/event/models/event_entry.dart' as event_model;
-import 'package:sporra_mobile/event/screens/event_detail.dart';
 
 class EventCard extends StatelessWidget {
   final event_model.Event event;
@@ -160,7 +159,7 @@ class EventCard extends StatelessWidget {
                           ),
                         ),
                         child: const Text(
-                          "Selengkapnya",
+                          "See more",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

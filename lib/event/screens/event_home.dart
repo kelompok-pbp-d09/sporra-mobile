@@ -113,14 +113,6 @@ class EventHomePageState extends State<EventHomePage> {
     setState(() {
       currentPage = page;
     });
-    if (mounted) {
-      Future.delayed(const Duration(milliseconds: 100), () {
-        Scrollable.ensureVisible(
-          context,
-          duration: const Duration(milliseconds: 300),
-        );
-      });
-    }
   }
 
   void toggleEventView(bool isPast) {
@@ -157,17 +149,17 @@ class EventHomePageState extends State<EventHomePage> {
       builder: (context) => AlertDialog(
         backgroundColor: cardDark,
         title: const Text(
-          'Hapus Event?',
+          'Delete Event?',
           style: TextStyle(color: Colors.white),
         ),
         content: Text(
-          'Hapus "${event.judul}"?',
+          'Delete "${event.judul}"?',
           style: const TextStyle(color: Colors.grey),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -175,7 +167,7 @@ class EventHomePageState extends State<EventHomePage> {
               deleteEvent(event.id);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -312,53 +304,71 @@ class EventHomePageState extends State<EventHomePage> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (currentPage > 1) ...[
+      child: Center(
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
               IconButton(
-                onPressed: () => changePage(currentPage - 1),
-                icon: const Icon(Icons.chevron_left),
+                onPressed: currentPage > 1 ? () => changePage(1) : null,
+                icon: const Icon(Icons.first_page), // Icon <<
+                tooltip: 'First Page',
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.grey[700],
-                  foregroundColor: Colors.white,
+                  backgroundColor: currentPage > 1
+                      ? Colors.grey[700]
+                      : const Color.fromARGB(255, 213, 211, 211),
+                  foregroundColor: currentPage > 1
+                      ? Colors.white
+                      : Colors.grey[700],
+                  disabledBackgroundColor: Colors.grey[900],
                 ),
               ),
-              const SizedBox(width: 8),
-            ],
-            if (currentPage > 2) ...[
-              _buildPageButton(1),
+
+              const SizedBox(width: 12),
+              _buildPageButton(1, isActive: currentPage == 1),
+
               if (currentPage > 3)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text('...', style: TextStyle(color: Colors.grey[400])),
                 ),
-            ],
-            if (currentPage > 1) _buildPageButton(currentPage - 1),
-            _buildPageButton(currentPage, isActive: true),
-            if (currentPage < totalPages) _buildPageButton(currentPage + 1),
-            if (currentPage < totalPages - 1) ...[
+
+              for (int i = currentPage - 1; i <= currentPage + 1; i++)
+                if (i > 1 && i < totalPages)
+                  _buildPageButton(i, isActive: currentPage == i),
+
               if (currentPage < totalPages - 2)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Text('...', style: TextStyle(color: Colors.grey[400])),
                 ),
-              _buildPageButton(totalPages),
-            ],
-            if (currentPage < totalPages) ...[
-              const SizedBox(width: 8),
+
+              if (totalPages > 1)
+                _buildPageButton(
+                  totalPages,
+                  isActive: currentPage == totalPages,
+                ),
+
+              const SizedBox(width: 12),
               IconButton(
-                onPressed: () => changePage(currentPage + 1),
-                icon: const Icon(Icons.chevron_right),
+                onPressed: currentPage < totalPages
+                    ? () => changePage(totalPages)
+                    : null,
+                icon: const Icon(Icons.last_page),
+                tooltip: 'Last Page',
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.grey[700],
-                  foregroundColor: Colors.white,
+                  backgroundColor: currentPage < totalPages
+                      ? Colors.grey[700]
+                      : const Color.fromARGB(255, 213, 211, 211),
+                  foregroundColor: currentPage < totalPages
+                      ? Colors.white
+                      : Colors.grey[700],
+                  disabledBackgroundColor: Colors.grey[900],
                 ),
               ),
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -424,9 +434,7 @@ class EventHomePageState extends State<EventHomePage> {
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    showPastEvents
-                        ? 'Event yang Sudah Selesai'
-                        : 'Event yang Akan Datang',
+                    showPastEvents ? 'Past Event' : 'Upcoming Event',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -466,7 +474,7 @@ class EventHomePageState extends State<EventHomePage> {
                     padding: EdgeInsets.all(40),
                     child: Center(
                       child: Text(
-                        "Tidak ada event",
+                        "No Event",
                         style: TextStyle(color: Colors.grey),
                       ),
                     ),
