@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../models/BookingModel.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 
-
 class MyBookingsPage extends StatefulWidget {
   const MyBookingsPage({Key? key}) : super(key: key);
 
@@ -18,54 +17,53 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   List<Booking> _bookings = [];
   bool _isLoading = true;
 
-@override
-void initState() {
-  super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final request = context.read<CookieRequest>();
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final request = context.read<CookieRequest>();
 
-    if (!request.loggedIn) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Silakan login untuk melihat daftar booking event kamu!."),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (!request.loggedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Silakan login untuk melihat daftar booking event kamu!."),
+            backgroundColor: Colors.red,
+          ),
+        );
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-      return;
-    }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+        return;
+      }
 
-    fetchBookings();
-  });
-}
-
+      fetchBookings();
+    });
+  }
 
   Future<void> fetchBookings() async {
     final request = context.read<CookieRequest>();
     setState(() => _isLoading = true);
 
     try {
-      // Endpoint sesuai urls.py: path('api/my-bookings/', ...)
       final response = await request.get('$baseUrl/ticketing/api/my-bookings/');
-
-      print("RESPONSE RAW: $response");
-
       final bookingEntry = BookingEntry.fromJson(response);
 
-      setState(() {
-        _bookings = bookingEntry.bookings;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _bookings = bookingEntry.bookings;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
       print("Error fetching bookings: $e");
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Gagal memuat data: $e")));
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal memuat data: $e")),
+        );
+      }
     }
   }
 
@@ -76,33 +74,31 @@ void initState() {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF111827), // Background gelap (Gray-900)
+      backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
-        title: const Text("⭐ My Bookings"),
-        backgroundColor: const Color(0xFF1F2937), // AppBar gelap (Gray-800)
+        title: const Text("My Bookings"),
+        backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
-        // --- TAMBAHAN: Tombol Refresh di AppBar ---
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: fetchBookings, // Memanggil fungsi fetch ulang
-            tooltip: 'Refresh Data',
-          ),
-        ],
       ),
-      // ------------------------------------------
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _refresh,
+              color: Colors.white,
+              backgroundColor: Colors.blue[700],
               child: _bookings.isEmpty
                   ? _buildEmptyState()
                   : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
                       padding: const EdgeInsets.all(16),
                       itemCount: _bookings.length,
                       itemBuilder: (context, index) {
                         final booking = _bookings[index];
-                        return _buildBookingCard(booking);
+                        // === DISINI KITA PAKAI ANIMASI ===
+                        return _StaggeredItem(
+                          index: index,
+                          child: _buildBookingCard(booking),
+                        );
                       },
                     ),
             ),
@@ -110,33 +106,45 @@ void initState() {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.confirmation_number_outlined,
-            size: 80,
-            color: Colors.grey,
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            "Belum ada tiket yang dipesan.",
-            style: TextStyle(color: Colors.grey, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context); // Kembali ke halaman list tiket
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[800]),
-            child: const Text(
-              "Cari Tiket",
-              style: TextStyle(color: Colors.white),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.confirmation_number_outlined,
+                    size: 80,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Belum ada tiket yang dipesan.",
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[800]),
+                    child: const Text(
+                      "Cari Tiket",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -144,7 +152,7 @@ void initState() {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1F2937), // Card color (Gray-800)
+        color: const Color(0xFF1F2937),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey[800]!),
         boxShadow: [
@@ -160,7 +168,7 @@ void initState() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HEADER: Event Title & ID
+            // HEADER
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -175,10 +183,7 @@ void initState() {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.blue[900]?.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8),
@@ -190,18 +195,13 @@ void initState() {
                 ),
               ],
             ),
-
             const SizedBox(height: 12),
-
-            // DETAILS: Date & Location
             _buildIconText(Icons.calendar_today, booking.date),
             const SizedBox(height: 6),
             _buildIconText(Icons.location_on, booking.location),
-
             const SizedBox(height: 16),
             const Divider(color: Colors.grey, height: 1),
             const SizedBox(height: 16),
-
             // TICKET INFO
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -215,10 +215,7 @@ void initState() {
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: booking.ticketType.toLowerCase() == 'vip'
                             ? Colors.amber[900]
@@ -256,14 +253,12 @@ void initState() {
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-
-            // FOOTER: Total Price & Booked Date
+            // FOOTER
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF111827), // Darker inner box
+                color: const Color(0xFF111827),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.green[900]!.withOpacity(0.5)),
               ),
@@ -279,7 +274,6 @@ void initState() {
                       ),
                       Text(
                         "Rp ${booking.totalPrice}",
-
                         style: const TextStyle(
                           color: Colors.greenAccent,
                           fontWeight: FontWeight.bold,
@@ -328,6 +322,62 @@ void initState() {
           ),
         ),
       ],
+    );
+  }
+}
+
+// === WIDGET ANIMASI (SAMA SEPERTI ALLTICKETSPAGE) ===
+class _StaggeredItem extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _StaggeredItem({required this.index, required this.child});
+
+  @override
+  State<_StaggeredItem> createState() => _StaggeredItemState();
+}
+
+class _StaggeredItemState extends State<_StaggeredItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.5), // Slide dari bawah ke posisi awal
+      end: Offset.zero,
+    ).animate(_animation);
+
+    // Delay animasi berdasarkan index (Cascade Effect)
+    Future.delayed(Duration(milliseconds: widget.index * 100), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _animation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
     );
   }
 }

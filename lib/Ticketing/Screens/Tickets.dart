@@ -1,26 +1,19 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import '../Models/TicketModel.dart'; 
 import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 
-// === MODEL KHUSUS DROPDOWN (UI Helper) ===
-class EventOption {
-  final String id;
-  final String title;
-
-  EventOption({required this.id, required this.title});
-
-  factory EventOption.fromJson(Map<String, dynamic> json) {
-    return EventOption(id: json['id'].toString(), title: json['title']);
-  }
-}
+// Imports Model & widgets
+import '../Models/TicketModel.dart'; 
+import '../other/EventOption.dart';
+import '../widgets/TicketCard.dart';
+import '../widgets/TicketFormDialog.dart';
+import '../widgets/BookingDialog.dart';
 
 class AllTicketsPage extends StatefulWidget {
-  final bool isEmbedded; //  Cek status embedded
+  final bool isEmbedded;
 
   const AllTicketsPage({Key? key, this.isEmbedded = false}) : super(key: key);
 
@@ -41,21 +34,57 @@ class AllTicketsPageState extends State<AllTicketsPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      fetchAllData();
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => fetchAllData());
     _searchController.addListener(_filterTickets);
   }
 
-  // UBAH: Pastikan method ini public
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  //  DATA FETCHING 
+  // Fungsi ini otomatis membuat layar jadi LOADING (Full Reload)
   Future<void> fetchAllData() async {
-    setState(() => _isLoading = true);
+    setState(() => _isLoading = true); // <--- INI KUNCINYA (Layar jadi blank loading)
     await Future.wait([fetchTickets(), fetchUserEvents()]);
-    if (mounted) {
-      setState(() => _isLoading = false);
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> fetchTickets() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.get('$baseUrl/ticketing/tickets/data/');
+      final ticketEntry = TicketEntry.fromJson(response);
+      if (mounted) {
+        setState(() {
+          _allTickets = ticketEntry.tickets;
+          _filteredTickets = ticketEntry.tickets;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error Fetch Tickets: $e");
     }
   }
 
+  Future<void> fetchUserEvents() async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.get('$baseUrl/ticketing/get-user-events/');
+      List<EventOption> list = [];
+      if (response['events'] != null) {
+        for (var d in response['events']) {
+          list.add(EventOption.fromJson(d));
+        }
+      }
+      if (mounted) setState(() => _userEvents = list);
+    } catch (e) {
+      debugPrint("Error Fetch Events: $e");
+    }
+  }
+
+  //  HELPERS & ACTIONS 
   void _filterTickets() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -77,120 +106,22 @@ class AllTicketsPageState extends State<AllTicketsPage> {
       );
       Future.delayed(const Duration(milliseconds: 300), () {
         Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
+            context, MaterialPageRoute(builder: (context) => const LoginPage()));
       });
       return false;
     }
     return true;
   }
 
-  // === FETCH DATA TIKET ===
-  Future<void> fetchTickets() async {
-    final request = context.read<CookieRequest>();
-    try {
-      final response = await request.get('$baseUrl/ticketing/tickets/data/');
-      final ticketEntry = TicketEntry.fromJson(response);
-      if (mounted) {
-        setState(() {
-          _allTickets = ticketEntry.tickets;
-          _filteredTickets = ticketEntry.tickets;
-        });
-      }
-    } catch (e) {
-      print("Error Fetch Tickets: $e");
-    }
-  }
-
-  // === FETCH EVENTS FOR DROPDOWN ===
-  Future<void> fetchUserEvents() async {
-    final request = context.read<CookieRequest>();
-    try {
-      final response = await request.get('$baseUrl/ticketing/get-user-events/');
-      List<EventOption> list = [];
-      if (response['events'] != null) {
-        for (var d in response['events']) {
-          list.add(EventOption.fromJson(d));
-        }
-      }
-      if (mounted) {
-        setState(() {
-          _userEvents = list;
-        });
-      }
-    } catch (e) {
-      print("Error Fetch Events: $e");
-    }
-  }
-
-  // === CREATE & EDIT TICKET ===
-  Future<void> saveTicket({
-    required bool isCreate,
-    int? ticketId,
-    required String eventId,
-    required String ticketType,
-    required double price,
-    required int available,
-  }) async {
-    final request = context.read<CookieRequest>();
-
-    String url = isCreate
-        ? '$baseUrl/ticketing/create-ticket/'
-        : '$baseUrl/ticketing/edit_ticket_ajax/$ticketId/';
-
-    try {
-      final response = await request.postJson(
-        url,
-        jsonEncode(<String, dynamic>{
-          'event': eventId,
-          'ticket_type': ticketType,
-          'price': price,
-          'available': available,
-        }),
-      );
-
-      if (response['success'] == true || response['status'] == 'success') {
-        if (!mounted) return;
-        Navigator.pop(context); // Tutup dialog form
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.green,
-            content: Text(
-              isCreate ? "Tiket berhasil dibuat!" : "Tiket berhasil disimpan!",
-            ),
-          ),
-        );
-        fetchAllData(); // Refresh data
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red,
-            content: Text("Gagal: ${response['error'] ?? response['message']}"),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
-    }
-  }
-
-  // === DELETE TICKET ===
   Future<void> deleteTicket(int ticketId) async {
     final request = context.read<CookieRequest>();
     final url = '$baseUrl/ticketing/delete_ticket_ajax/$ticketId/';
-
     try {
       final response = await request.post(url, {});
       if (response['success'] == true) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            backgroundColor: Colors.red,
-            content: Text("Tiket berhasil dihapus!"),
-          ),
+          const SnackBar(backgroundColor: Colors.red, content: Text("Tiket berhasil dihapus!")),
         );
         fetchAllData();
       } else {
@@ -199,49 +130,9 @@ class AllTicketsPageState extends State<AllTicketsPage> {
             const SnackBar(content: Text("Gagal menghapus tiket.")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
-
-  // === BOOK TICKET ===
-  Future<void> bookTicket(Ticket ticket, int quantity) async {
-    final request = context.read<CookieRequest>();
-    final url = '$baseUrl/ticketing/book/${ticket.eventId}/';
-
-    try {
-      final response = await request.post(url, {
-        'ticket': ticket.id.toString(),
-        'quantity': quantity.toString(),
-      });
-
-      if (response['status'] == 'success') {
-        if (!mounted) return;
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.green,
-            content: Text("🎉 ${response['message']}"),
-          ),
-        );
-        fetchAllData();
-      } else {
-        if (!mounted) return;
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red,
-            content: Text("❌ ${response['message']}"),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error koneksi: $e")));
-    }
-  }
-
-  // === UI DIALOGS ===
 
   void showDeleteConfirmation(int ticketId) {
     showDialog(
@@ -249,24 +140,18 @@ class AllTicketsPageState extends State<AllTicketsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1F2937),
-          title: const Text(
-            "Hapus Tiket",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          content: const Text(
-            "Apakah Anda yakin ingin menghapus tiket ini? Tindakan ini tidak dapat dibatalkan.",
-            style: TextStyle(color: Colors.white70),
-          ),
+          title: const Text("Hapus Tiket", style: TextStyle(color: Colors.white)),
+          content: const Text("Yakin ingin menghapus tiket ini?",
+              style: TextStyle(color: Colors.white70)),
           actions: [
             TextButton(
-              child: const Text("Batal", style: TextStyle(color: Colors.grey)),
-              onPressed: () => Navigator.pop(context),
-            ),
+                child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                onPressed: () => Navigator.pop(context)),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red[700]),
               onPressed: () {
-                Navigator.pop(context); // Tutup dialog konfirmasi
-                deleteTicket(ticketId); // Jalankan fungsi hapus
+                Navigator.pop(context);
+                deleteTicket(ticketId);
               },
               child: const Text("Hapus", style: TextStyle(color: Colors.white)),
             ),
@@ -276,627 +161,109 @@ class AllTicketsPageState extends State<AllTicketsPage> {
     );
   }
 
-  void showTicketFormDialog({Ticket? ticket}) {
-    bool isCreate = ticket == null;
-    final formKey = GlobalKey<FormState>();
-
-    if (isCreate && _userEvents.isEmpty) {
+void showTicketFormDialog({Ticket? ticket}) {
+    if (ticket == null && _userEvents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          backgroundColor: Colors.orange,
-          content: Text("Anda belum memiliki Event. Buat Event terlebih dahulu!"),
+          backgroundColor: Colors.orange, 
+          content: Text("Buat Event dulu!")
         ),
       );
       return;
     }
-
-    TextEditingController priceController = TextEditingController(
-      text: ticket?.price.toString() ?? "",
-    );
-    TextEditingController availableController = TextEditingController(
-      text: ticket?.available.toString() ?? "",
-    );
-
-    String ticketType = ticket?.ticketType ?? "Regular";
-    String? selectedEventId = ticket?.eventId;
-
-    if (isCreate && _userEvents.isNotEmpty) {
-      selectedEventId = _userEvents.first.id;
-    }
-
     showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF1F2937),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15)),
-              title: Text(
-                isCreate ? "Buat Tiket Baru" : "Edit Tiket",
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isCreate) ...[
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text("Pilih Event",
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 12)),
-                        ),
-                        DropdownButtonFormField<String>(
-                          value: selectedEventId,
-                          dropdownColor: const Color(0xFF374151),
-                          style: const TextStyle(color: Colors.white),
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            enabledBorder: UnderlineInputBorder(
-                                borderSide: BorderSide(color: Colors.grey)),
-                          ),
-                          items: _userEvents.map((EventOption event) {
-                            return DropdownMenuItem<String>(
-                              value: event.id,
-                              child: Text(event.title,
-                                  overflow: TextOverflow.ellipsis),
-                            );
-                          }).toList(),
-                          onChanged: (val) =>
-                              setStateDialog(() => selectedEventId = val),
-                          validator: (val) =>
-                              val == null ? "Pilih event terlebih dahulu" : null,
-                        ),
-                      ] else ...[
-                        TextFormField(
-                          initialValue: ticket?.eventTitle,
-                          enabled: false,
-                          style: const TextStyle(color: Colors.grey),
-                          decoration: const InputDecoration(
-                            labelText: "Event",
-                            labelStyle: TextStyle(color: Colors.grey),
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 15),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Tipe Tiket",
-                            style: TextStyle(color: Colors.grey, fontSize: 12)),
-                      ),
-                      DropdownButtonFormField<String>(
-                        value: ["Regular", "VIP"].contains(ticketType)
-                            ? ticketType
-                            : "Regular",
-                        dropdownColor: const Color(0xFF374151),
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          enabledBorder: UnderlineInputBorder(
-                              borderSide: BorderSide(color: Colors.grey)),
-                        ),
-                        items: ["Regular", "VIP"].map((String val) {
-                          return DropdownMenuItem(value: val, child: Text(val));
-                        }).toList(),
-                        onChanged: (val) =>
-                            setStateDialog(() => ticketType = val!),
-                      ),
-                      const SizedBox(height: 15),
-                      TextFormField(
-                        controller: priceController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          labelText: "Harga (Rp)",
-                          labelStyle: TextStyle(color: Colors.grey),
-                          enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.grey)),
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue)),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (val) {
-                          if (val == null || val.isEmpty)
-                            return "Harga wajib diisi";
-                          final number = double.tryParse(val);
-                          if (number == null) return "Harus berupa angka";
-                          if (number < 0) return "Harga tidak boleh negatif";
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 15),
-                      TextFormField(
-                        controller: availableController,
-                        style: const TextStyle(color: Colors.white),
-                        decoration: const InputDecoration(
-                          labelText: "Stok Tiket",
-                          labelStyle: TextStyle(color: Colors.grey),
-                          enabledBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.grey)),
-                          focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(color: Colors.blue)),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (val) {
-                          if (val == null || val.isEmpty)
-                            return "Stok wajib diisi";
-                          final number = int.tryParse(val);
-                          if (number == null) return "Harus berupa angka bulat";
-                          if (number < 0) return "Stok tidak boleh negatif";
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  child: const Text("Batal",
-                      style: TextStyle(color: Colors.redAccent)),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                ElevatedButton(
-                  style:
-                      ElevatedButton.styleFrom(backgroundColor: Colors.blue[600]),
-                  onPressed: () {
-                    if (formKey.currentState!.validate()) {
-                      saveTicket(
-                        isCreate: isCreate,
-                        ticketId: ticket?.id,
-                        eventId: isCreate ? selectedEventId! : ticket!.eventId,
-                        ticketType: ticketType,
-                        price: double.parse(priceController.text),
-                        available: int.parse(availableController.text),
-                      );
-                    }
-                  },
-                  child: Text(isCreate ? "Buat" : "Simpan",
-                      style: const TextStyle(color: Colors.white)),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (context) => TicketFormDialog(
+        ticket: ticket,
+        userEvents: _userEvents,
+        existingTickets: _allTickets, 
+        onSuccess: fetchAllData,
+      ),
     );
   }
 
-  void showBookingDialog(Ticket ticket) {
-    int quantity = 1;
+  void openBookingDialog(Ticket ticket) {
     showDialog(
       context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            final total = ticket.price * quantity;
-            return AlertDialog(
-              backgroundColor: const Color(0xFF1F2937),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15)),
-              title: const Text("Pesan Tiket",
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ticket.eventTitle,
-                    style: const TextStyle(
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18),
-                  ),
-                  const SizedBox(height: 5),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: ticket.ticketType == "VIP"
-                          ? Colors.amber.withOpacity(0.2)
-                          : Colors.blue.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(5),
-                      border: Border.all(
-                        color: ticket.ticketType == "VIP"
-                            ? Colors.amber
-                            : Colors.blueAccent,
-                      ),
-                    ),
-                    child: Text(
-                      ticket.ticketType,
-                      style: TextStyle(
-                        color: ticket.ticketType == "VIP"
-                            ? Colors.amber
-                            : Colors.blueAccent,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Jumlah:",
-                          style: TextStyle(color: Colors.white70)),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: Icon(Icons.remove_circle,
-                                color: quantity > 1
-                                    ? Colors.redAccent
-                                    : Colors.grey),
-                            onPressed: () {
-                              if (quantity > 1) {
-                                setStateDialog(() => quantity--);
-                              }
-                            },
-                          ),
-                          Text(
-                            "$quantity",
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.add_circle,
-                              color: quantity < ticket.available
-                                  ? Colors.greenAccent
-                                  : Colors.grey,
-                            ),
-                            onPressed: () {
-                              if (quantity < ticket.available) {
-                                setStateDialog(() => quantity++);
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const Divider(color: Colors.grey, height: 30),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text("Total:",
-                          style: TextStyle(color: Colors.white, fontSize: 16)),
-                      Text(
-                        "Rp ${total.toStringAsFixed(0)}",
-                        style: const TextStyle(
-                            color: Colors.greenAccent,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  child:
-                      const Text("Batal", style: TextStyle(color: Colors.grey)),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[700]),
-                  onPressed: () => bookTicket(ticket, quantity),
-                  child: const Text("Konfirmasi",
-                      style: TextStyle(color: Colors.white)),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (context) => BookingDialog(
+        ticket: ticket,
+        onSuccess: fetchAllData,
+      ),
     );
   }
 
+  //  UI BUILDER 
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
-    // === DEFINISI ISI KONTEN (Tanpa Scaffold) ===
+    // Struktur Body (Disesuaikan agar mirip MyBookings)
     Widget bodyContent = Column(
       children: [
-        // Search Bar
+        // Search Bar (Tetap di atas)
         Padding(
           padding: const EdgeInsets.all(12.0),
           child: TextField(
             controller: _searchController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: "Cari Ticket (Event / Tipe)...",
+              hintText: "Cari Ticket...",
               hintStyle: TextStyle(color: Colors.grey[400]),
               filled: true,
               fillColor: const Color(0xFF1F2937),
               prefixIcon: const Icon(Icons.search, color: Colors.grey),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
             ),
           ),
         ),
-        // Grid View
+        
+        // Content Area
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : _filteredTickets.isEmpty
-                  ? const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.confirmation_number_outlined,
-                              size: 60, color: Colors.grey),
-                          SizedBox(height: 10),
-                          Text(
-                            "Tidak ada tiket tersedia 😔",
-                            style: TextStyle(color: Colors.grey),
+              ? const Center(child: CircularProgressIndicator()) // INI YANG MUNCUL SAAT REFRESH
+              : RefreshIndicator(
+                  onRefresh: fetchAllData, // PANGGIL fetchAllData AGAR LOADING MUNCUL
+                  color: Colors.white,
+                  backgroundColor: Colors.blue[700],
+                  child: _filteredTickets.isEmpty
+                      ? _buildEmptyState() 
+                      : GridView.builder(
+                          physics: const AlwaysScrollableScrollPhysics(), // Wajib ada
+                          padding: const EdgeInsets.all(12),
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 0.55,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
                           ),
-                        ],
-                      ),
-                    )
-                  : GridView.builder(
-                      padding: const EdgeInsets.all(12),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 0.58,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemCount: _filteredTickets.length,
-                      itemBuilder: (context, index) {
-                        final ticket = _filteredTickets[index];
-                        final isAvailable = ticket.available > 0;
-                        final isVIP = ticket.ticketType.toUpperCase() == "VIP";
-
-                        final themeColor =
-                            isVIP ? const Color(0xFFFFD700) : Colors.blueAccent;
-
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1F2937),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                                color: isVIP
-                                    ? Colors.amber.withOpacity(0.5)
-                                    : Colors.grey[800]!,
-                                width: isVIP ? 2 : 1),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
+                          itemCount: _filteredTickets.length,
+                          itemBuilder: (context, index) {
+                            final ticket = _filteredTickets[index];
+                            return _StaggeredItem(
+                              index: index,
+                              child: TicketCard(
+                                ticket: ticket,
+                                request: request,
+                                onBook: () => openBookingDialog(ticket),
+                                onEdit: () => showTicketFormDialog(ticket: ticket),
+                                onDelete: () => showDeleteConfirmation(ticket.id),
+                                requireLogin: requireLogin,
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // === Header Card (Badge) ===
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: themeColor.withOpacity(0.15),
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(14),
-                                    topRight: Radius.circular(14),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Icon(Icons.local_activity,
-                                        size: 16, color: themeColor),
-                                    Text(
-                                      ticket.ticketType.toUpperCase(),
-                                      style: TextStyle(
-                                        color: themeColor,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // === Content ===
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Judul Event
-                                      Text(
-                                        ticket.eventTitle,
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          height: 1.2,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      const Spacer(),
-                                      // Info Harga
-                                      Text(
-                                        "Rp ${ticket.price.toStringAsFixed(0)}",
-                                        style: TextStyle(
-                                          color: Colors.green[400],
-                                          fontWeight: FontWeight.w800,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      // Info Stok
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.inventory_2_outlined,
-                                            size: 14,
-                                            color: isAvailable
-                                                ? Colors.grey
-                                                : Colors.red,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            isAvailable
-                                                ? "${ticket.available} Tersedia"
-                                                : "Habis Terjual",
-                                            style: TextStyle(
-                                              color: isAvailable
-                                                  ? Colors.grey
-                                                  : Colors.red,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              // === Action Buttons ===
-                              Padding(
-                                padding:
-                                    const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                                child: Column(
-                                  children: [
-                                    // Tombol Pesan
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: isAvailable
-                                              ? themeColor
-                                              : Colors.grey[700],
-                                          foregroundColor: isVIP && isAvailable
-                                              ? Colors.black
-                                              : Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8)),
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 10),
-                                          elevation: 0,
-                                        ),
-                                        onPressed: isAvailable
-                                            ? () {
-                                                if (!requireLogin()) return;
-                                                showBookingDialog(ticket);
-                                              }
-                                            : null,
-                                        child: Text(
-                                          isAvailable
-                                              ? "Pesan Sekarang"
-                                              : "Habis",
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 13),
-                                        ),
-                                      ),
-                                    ),
-
-                                    // Tombol Edit & Hapus (Hanya jika Login & Owner)
-                                    if (request.loggedIn &&
-                                        ticket.canEdit) ...[
-                                      const SizedBox(height: 8),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () => showTicketFormDialog(
-                                                  ticket: ticket),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8),
-                                                decoration: BoxDecoration(
-                                                    color: Colors.grey[800],
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8),
-                                                    border: Border.all(
-                                                        color: Colors
-                                                            .grey[700]!)),
-                                                child: const Icon(Icons.edit,
-                                                    color: Colors.white,
-                                                    size: 16),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: InkWell(
-                                              onTap: () =>
-                                                  showDeleteConfirmation(
-                                                      ticket.id),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8),
-                                                decoration: BoxDecoration(
-                                                    color: Colors.red[900]!
-                                                        .withOpacity(0.3),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            8),
-                                                    border: Border.all(
-                                                        color: Colors
-                                                            .red[900]!)),
-                                                child: Icon(Icons.delete,
-                                                    color: Colors.red[300],
-                                                    size: 16),
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                            );
+                          },
+                        ),
+                ),
         ),
       ],
     );
 
-    // === KONDISI UTAMA AGAR HEADER TIDAK NABRAK ===
-    // Jika isEmbedded = true (di dalam MainMenu), hanya return Body (tanpa AppBar)
     if (widget.isEmbedded) {
       return Scaffold(
-        backgroundColor: const Color(0xFF111827),
-        body: bodyContent,
+        backgroundColor: const Color(0xFF111827), 
+        body: bodyContent
       );
     }
 
-    // Jika dipanggil sendiri, return Scaffold lengkap dengan AppBar dan Drawer
     return Scaffold(
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
@@ -908,18 +275,13 @@ class AllTicketsPageState extends State<AllTicketsPage> {
           IconButton(
             icon: const Icon(Icons.receipt_long),
             tooltip: "My Bookings",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MyBookingsPage()),
-              );
-            },
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MyBookingsPage())),
           ),
         ],
       ),
       drawer: const LeftDrawer(),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.green[600],
+        backgroundColor: Colors.blue[700],
         onPressed: () {
           if (!requireLogin()) return;
           showTicketFormDialog();
@@ -927,6 +289,83 @@ class AllTicketsPageState extends State<AllTicketsPage> {
         child: const Icon(Icons.add, color: Colors.white),
       ),
       body: bodyContent,
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.confirmation_number_outlined, size: 60, color: Colors.grey),
+                  SizedBox(height: 10),
+                  Text("Tidak ada tiket tersedia 😔", style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+//  WIDGET ANIMASI 
+class _StaggeredItem extends StatefulWidget {
+  final int index;
+  final Widget child;
+
+  const _StaggeredItem({required this.index, required this.child});
+
+  @override
+  State<_StaggeredItem> createState() => _StaggeredItemState();
+}
+
+class _StaggeredItemState extends State<_StaggeredItem> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.5), 
+      end: Offset.zero,
+    ).animate(_animation);
+
+    Future.delayed(Duration(milliseconds: widget.index * 100), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _animation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
     );
   }
 }

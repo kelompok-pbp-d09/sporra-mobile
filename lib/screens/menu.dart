@@ -65,16 +65,6 @@ class _MainMenuState extends State<MainMenu> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          // LOGIKA KHUSUS TIKET: Tombol Refresh & MyBookings muncul di AppBar MainMenu
-          if (_selectedIndex == 2) ...[
-            IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: "Refresh Tickets",
-              onPressed: () {
-                // Panggil fungsi refresh di dalam AllTicketsPage
-                _ticketKey.currentState?.fetchAllData();
-              },
-            ),
             IconButton(
               icon: const Icon(Icons.receipt_long),
               tooltip: "My Bookings",
@@ -86,7 +76,7 @@ class _MainMenuState extends State<MainMenu> {
                 );
               },
             ),
-          ],
+          
           const ProfileAvatarButton(),
         ],
       ),
@@ -119,14 +109,10 @@ class _MainMenuState extends State<MainMenu> {
                     _eventHomeKey.currentState?.loadEvents();
                   }
                 } else if (_selectedIndex == 2) {
-                  // === Logic Ticket ===
-                  // Panggil dialog form tiket via key, BUKAN push page baru
-                  // Ini mencegah halaman bertumpuk
                   _ticketKey.currentState?.showTicketFormDialog();
                 }
               },
-              backgroundColor:
-                  _selectedIndex == 2 ? Colors.green[600] : Colors.blue[700],
+              backgroundColor: Colors.blue[700],
               foregroundColor: Colors.white,
               tooltip: _selectedIndex == 2
                   ? 'Add Ticket'
