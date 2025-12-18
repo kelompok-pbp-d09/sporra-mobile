@@ -5,7 +5,7 @@ import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 
-// Imports Model & widgets
+// Imports Model & Widgets
 import '../Models/TicketModel.dart'; 
 import '../other/EventOption.dart';
 import '../widgets/TicketCard.dart';
@@ -44,12 +44,15 @@ class AllTicketsPageState extends State<AllTicketsPage> {
     super.dispose();
   }
 
-  //  DATA FETCHING 
-  // Fungsi ini otomatis membuat layar jadi LOADING (Full Reload)
+  // === DATA FETCHING ===
   Future<void> fetchAllData() async {
-    setState(() => _isLoading = true); // <--- INI KUNCINYA (Layar jadi blank loading)
+    setState(() => _isLoading = true);
     await Future.wait([fetchTickets(), fetchUserEvents()]);
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _handleRefresh() async {
+    await Future.wait([fetchTickets(), fetchUserEvents()]);
   }
 
   Future<void> fetchTickets() async {
@@ -84,7 +87,7 @@ class AllTicketsPageState extends State<AllTicketsPage> {
     }
   }
 
-  //  HELPERS & ACTIONS 
+  // === HELPERS & ACTIONS ===
   void _filterTickets() {
     final query = _searchController.text.toLowerCase();
     setState(() {
@@ -100,7 +103,7 @@ class AllTicketsPageState extends State<AllTicketsPage> {
     if (!request.loggedIn) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Silakan login terlebih dahulu untuk melanjutkan."),
+          content: Text("Please login first to continue."), // EN
           backgroundColor: Colors.red,
         ),
       );
@@ -121,13 +124,13 @@ class AllTicketsPageState extends State<AllTicketsPage> {
       if (response['success'] == true) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(backgroundColor: Colors.red, content: Text("Tiket berhasil dihapus!")),
+          const SnackBar(backgroundColor: Colors.red, content: Text("Ticket deleted successfully!")), // EN
         );
         fetchAllData();
       } else {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Gagal menghapus tiket.")));
+            const SnackBar(content: Text("Failed to delete ticket."))); // EN
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: $e")));
@@ -140,12 +143,12 @@ class AllTicketsPageState extends State<AllTicketsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1F2937),
-          title: const Text("Hapus Tiket", style: TextStyle(color: Colors.white)),
-          content: const Text("Yakin ingin menghapus tiket ini?",
+          title: const Text("Delete Ticket", style: TextStyle(color: Colors.white)), // EN
+          content: const Text("Are you sure you want to delete this ticket?", // EN
               style: TextStyle(color: Colors.white70)),
           actions: [
             TextButton(
-                child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+                child: const Text("Cancel", style: TextStyle(color: Colors.grey)), // EN
                 onPressed: () => Navigator.pop(context)),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red[700]),
@@ -153,7 +156,7 @@ class AllTicketsPageState extends State<AllTicketsPage> {
                 Navigator.pop(context);
                 deleteTicket(ticketId);
               },
-              child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+              child: const Text("Delete", style: TextStyle(color: Colors.white)), // EN
             ),
           ],
         );
@@ -161,12 +164,12 @@ class AllTicketsPageState extends State<AllTicketsPage> {
     );
   }
 
-void showTicketFormDialog({Ticket? ticket}) {
+  void showTicketFormDialog({Ticket? ticket}) {
     if (ticket == null && _userEvents.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.orange, 
-          content: Text("Buat Event dulu!")
+          content: Text("Create an Event first!") // EN
         ),
       );
       return;
@@ -176,7 +179,7 @@ void showTicketFormDialog({Ticket? ticket}) {
       builder: (context) => TicketFormDialog(
         ticket: ticket,
         userEvents: _userEvents,
-        existingTickets: _allTickets, 
+        existingTickets: _allTickets,
         onSuccess: fetchAllData,
       ),
     );
@@ -192,22 +195,22 @@ void showTicketFormDialog({Ticket? ticket}) {
     );
   }
 
-  //  UI BUILDER 
+  // === UI BUILDER ===
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
 
-    // Struktur Body (Disesuaikan agar mirip MyBookings)
+    // Struktur Body
     Widget bodyContent = Column(
       children: [
-        // Search Bar (Tetap di atas)
+        // Search Bar
         Padding(
           padding: const EdgeInsets.all(12.0),
           child: TextField(
             controller: _searchController,
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(
-              hintText: "Cari Ticket...",
+              hintText: "Search Tickets...", // EN
               hintStyle: TextStyle(color: Colors.grey[400]),
               filled: true,
               fillColor: const Color(0xFF1F2937),
@@ -220,15 +223,15 @@ void showTicketFormDialog({Ticket? ticket}) {
         // Content Area
         Expanded(
           child: _isLoading
-              ? const Center(child: CircularProgressIndicator()) // INI YANG MUNCUL SAAT REFRESH
+              ? const Center(child: CircularProgressIndicator())
               : RefreshIndicator(
-                  onRefresh: fetchAllData, // PANGGIL fetchAllData AGAR LOADING MUNCUL
+                  onRefresh: fetchAllData,
                   color: Colors.white,
                   backgroundColor: Colors.blue[700],
                   child: _filteredTickets.isEmpty
                       ? _buildEmptyState() 
                       : GridView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(), // Wajib ada
+                          physics: const AlwaysScrollableScrollPhysics(),
                           padding: const EdgeInsets.all(12),
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
@@ -305,7 +308,7 @@ void showTicketFormDialog({Ticket? ticket}) {
                 children: [
                   Icon(Icons.confirmation_number_outlined, size: 60, color: Colors.grey),
                   SizedBox(height: 10),
-                  Text("Tidak ada tiket tersedia 😔", style: TextStyle(color: Colors.grey)),
+                  Text("No tickets available 😔", style: TextStyle(color: Colors.grey)), // EN
                 ],
               ),
             ),
@@ -316,7 +319,7 @@ void showTicketFormDialog({Ticket? ticket}) {
   }
 }
 
-//  WIDGET ANIMASI 
+// === WIDGET ANIMASI ===
 class _StaggeredItem extends StatefulWidget {
   final int index;
   final Widget child;

@@ -26,7 +26,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       if (!request.loggedIn) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Silakan login untuk melihat daftar booking event kamu!."),
+            content: Text("Please login to view your booked events!"), // EN
             backgroundColor: Colors.red,
           ),
         );
@@ -61,7 +61,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal memuat data: $e")),
+          SnackBar(content: Text("Failed to load data: $e")), // EN
         );
       }
     }
@@ -76,7 +76,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
-        title: const Text("My Bookings"),
+        title: const Text("My Bookings"), // EN
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
       ),
@@ -94,7 +94,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       itemCount: _bookings.length,
                       itemBuilder: (context, index) {
                         final booking = _bookings[index];
-                        // === DISINI KITA PAKAI ANIMASI ===
                         return _StaggeredItem(
                           index: index,
                           child: _buildBookingCard(booking),
@@ -125,7 +124,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    "Belum ada tiket yang dipesan.",
+                    "You haven't booked any tickets yet.", // EN
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
@@ -135,7 +134,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[800]),
                     child: const Text(
-                      "Cari Tiket",
+                      "Find Tickets", // EN
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -210,7 +209,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Tipe Tiket",
+                      "Ticket Type", // EN
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
@@ -237,7 +236,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     const Text(
-                      "Jumlah",
+                      "Quantity", // EN
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
@@ -269,7 +268,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Total Bayar",
+                        "Total Price", // EN
                         style: TextStyle(color: Colors.green, fontSize: 12),
                       ),
                       Text(
@@ -286,7 +285,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       const Text(
-                        "Dipesan pada",
+                        "Booked on", // EN
                         style: TextStyle(color: Colors.grey, fontSize: 10),
                       ),
                       Text(

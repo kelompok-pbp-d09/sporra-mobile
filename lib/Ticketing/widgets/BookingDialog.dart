@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import '../Models/TicketModel.dart'; // Sesuaikan path ini
+import '../Models/TicketModel.dart'; 
 
 class BookingDialog extends StatefulWidget {
   final Ticket ticket;
@@ -37,10 +37,10 @@ class _BookingDialogState extends State<BookingDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.green,
-            content: Text("🎉 ${response['message']}"),
+            content: Text("Ticket booked successfully! Thank you!"), 
           ),
         );
-        widget.onSuccess(); // Refresh halaman utama
+        widget.onSuccess(); // Refresh main page
       } else {
         if (!mounted) return;
         Navigator.pop(context);
@@ -53,7 +53,7 @@ class _BookingDialogState extends State<BookingDialog> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error koneksi: $e")),
+        SnackBar(content: Text("Connection error: $e")), // EN
       );
     }
   }
@@ -66,7 +66,7 @@ class _BookingDialogState extends State<BookingDialog> {
     return AlertDialog(
       backgroundColor: const Color(0xFF1F2937),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      title: const Text("Pesan Tiket",
+      title: const Text("Book Ticket", // EN
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
@@ -100,7 +100,7 @@ class _BookingDialogState extends State<BookingDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Jumlah:", style: TextStyle(color: Colors.white70)),
+              const Text("Quantity:", style: TextStyle(color: Colors.white70)), // EN
               Row(
                 children: [
                   IconButton(
@@ -138,7 +138,7 @@ class _BookingDialogState extends State<BookingDialog> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text("Total:", style: TextStyle(color: Colors.white, fontSize: 16)),
+              const Text("Total:", style: TextStyle(color: Colors.white, fontSize: 16)), // EN
               Text(
                 "Rp ${total.toStringAsFixed(0)}",
                 style: const TextStyle(
@@ -152,13 +152,13 @@ class _BookingDialogState extends State<BookingDialog> {
       ),
       actions: [
         TextButton(
-          child: const Text("Batal", style: TextStyle(color: Colors.grey)),
+          child: const Text("Cancel", style: TextStyle(color: Colors.grey)), // EN
           onPressed: () => Navigator.pop(context),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[700]),
           onPressed: _bookTicket,
-          child: const Text("Konfirmasi", style: TextStyle(color: Colors.white)),
+          child: const Text("Confirm", style: TextStyle(color: Colors.white)), // EN
         ),
       ],
     );

@@ -8,14 +8,14 @@ import '../other/EventOption.dart';
 class TicketFormDialog extends StatefulWidget {
   final Ticket? ticket;
   final List<EventOption> userEvents;
-  final List<Ticket> existingTickets; // <--- TAMBAHAN: Data tiket yg sudah ada
+  final List<Ticket> existingTickets;
   final VoidCallback onSuccess;
 
   const TicketFormDialog({
     Key? key,
     this.ticket,
     required this.userEvents,
-    required this.existingTickets, // <--- Wajib diisi
+    required this.existingTickets,
     required this.onSuccess,
   }) : super(key: key);
 
@@ -45,30 +45,26 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
     }
   }
 
-  // === FUNGSI VALIDASI DUPLIKAT ===
+  // === VALIDASI DUPLIKAT ===
   bool _isDuplicate() {
-    // Cek apakah ada tiket lain dengan Event ID sama DAN Tipe Tiket sama
     bool exists = widget.existingTickets.any((t) {
-      // Jangan cek tiket diri sendiri saat mode Edit
       if (widget.ticket != null && t.id == widget.ticket!.id) {
         return false; 
       }
       return t.eventId == _selectedEventId && t.ticketType == _ticketType;
     });
-
     return exists;
   }
 
   Future<void> _saveTicket() async {
-    // 1. CEK VALIDASI DUPLIKAT DISINI
     if (_isDuplicate()) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: Colors.red,
-          content: Text("Gagal: Tiket $_ticketType untuk event ini sudah ada!"),
+          content: Text("Failed: $_ticketType ticket for this event already exists!"), // EN
         ),
       );
-      return; // Stop, jangan lanjut ke backend
+      return;
     }
 
     final request = context.read<CookieRequest>();
@@ -95,7 +91,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.green,
-            content: Text(isCreate ? "Tiket berhasil dibuat!" : "Tiket berhasil disimpan!"),
+            content: Text(isCreate ? "Ticket created successfully!" : "Ticket updated successfully!"), // EN
           ),
         );
         widget.onSuccess();
@@ -104,7 +100,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.red,
-            content: Text("Gagal: ${response['error'] ?? response['message']}"),
+            content: Text("Failed: ${response['error'] ?? response['message']}"), // EN
           ),
         );
       }
@@ -121,7 +117,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
       backgroundColor: const Color(0xFF1F2937),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       title: Text(
-        isCreate ? "Buat Tiket Baru" : "Edit Tiket",
+        isCreate ? "Create New Ticket" : "Edit Ticket", // EN
         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       content: Form(
@@ -133,7 +129,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
               if (isCreate) ...[
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("Pilih Event",
+                  child: Text("Select Event", // EN
                       style: TextStyle(color: Colors.grey, fontSize: 12)),
                 ),
                 DropdownButtonFormField<String>(
@@ -153,7 +149,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
                   }).toList(),
                   onChanged: (val) => setState(() => _selectedEventId = val),
                   validator: (val) =>
-                      val == null ? "Pilih event terlebih dahulu" : null,
+                      val == null ? "Please select an event first" : null, // EN
                 ),
               ] else ...[
                 TextFormField(
@@ -170,7 +166,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
               const SizedBox(height: 15),
               const Align(
                 alignment: Alignment.centerLeft,
-                child: Text("Tipe Tiket",
+                child: Text("Ticket Type", // EN
                     style: TextStyle(color: Colors.grey, fontSize: 12)),
               ),
               DropdownButtonFormField<String>(
@@ -193,7 +189,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
                 controller: _priceController,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: "Harga (Rp)",
+                  labelText: "Price (Rp)", // EN
                   labelStyle: TextStyle(color: Colors.grey),
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey)),
@@ -202,9 +198,9 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
                 ),
                 keyboardType: TextInputType.number,
                 validator: (val) {
-                  if (val == null || val.isEmpty) return "Harga wajib diisi";
-                  if (double.tryParse(val) == null) return "Harus angka valid";
-                  if (double.parse(val) < 0) return "Tidak boleh negatif";
+                  if (val == null || val.isEmpty) return "Price is required"; // EN
+                  if (double.tryParse(val) == null) return "Must be a valid number"; // EN
+                  if (double.parse(val) < 0) return "Price cannot be negative"; // EN
                   return null;
                 },
               ),
@@ -213,7 +209,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
                 controller: _availableController,
                 style: const TextStyle(color: Colors.white),
                 decoration: const InputDecoration(
-                  labelText: "Stok Tiket",
+                  labelText: "Ticket Stock", // EN
                   labelStyle: TextStyle(color: Colors.grey),
                   enabledBorder: OutlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey)),
@@ -222,9 +218,9 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
                 ),
                 keyboardType: TextInputType.number,
                 validator: (val) {
-                  if (val == null || val.isEmpty) return "Stok wajib diisi";
-                  if (int.tryParse(val) == null) return "Harus angka bulat";
-                  if (int.parse(val) < 0) return "Tidak boleh negatif";
+                  if (val == null || val.isEmpty) return "Stock is required"; // EN
+                  if (int.tryParse(val) == null) return "Must be a whole number"; // EN
+                  if (int.parse(val) < 0) return "Stock cannot be negative"; // EN
                   return null;
                 },
               ),
@@ -234,7 +230,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
       ),
       actions: [
         TextButton(
-          child: const Text("Batal", style: TextStyle(color: Colors.redAccent)),
+          child: const Text("Cancel", style: TextStyle(color: Colors.redAccent)), // EN
           onPressed: () => Navigator.pop(context),
         ),
         ElevatedButton(
@@ -244,7 +240,7 @@ class _TicketFormDialogState extends State<TicketFormDialog> {
               _saveTicket();
             }
           },
-          child: Text(isCreate ? "Buat" : "Simpan",
+          child: Text(isCreate ? "Create" : "Save", // EN
               style: const TextStyle(color: Colors.white)),
         ),
       ],

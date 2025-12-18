@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
-import '../Models/TicketModel.dart'; 
+import '../Models/TicketModel.dart';
 
 class TicketCard extends StatefulWidget {
   final Ticket ticket;
@@ -60,23 +60,23 @@ class _TicketCardState extends State<TicketCard> {
             borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
-                // 1. DEKORASI BACKGROUND
+                // === 1. DEKORASI BACKGROUND (WATERMARK) ===
                 Positioned(
                   bottom: -20,
                   right: -20,
                   child: Transform.rotate(
-                    angle: -0.2, 
+                    angle: -0.2, // Miringkan sedikit
                     child: Icon(
-                      isVIP ? Icons.star : Icons.confirmation_number, // ikon utk VIP dan regular
+                      isVIP ? Icons.star : Icons.confirmation_number,
                       size: 140, // Ukuran SANGAT BESAR
                       color: isVIP
-                          ? Colors.amber.withOpacity(0.05) // Transparan sekali
+                          ? Colors.amber.withOpacity(0.05)
                           : Colors.white.withOpacity(0.03),
                     ),
                   ),
                 ),
 
-                // 2. KONTEN UTAMA
+                // === 2. KONTEN UTAMA ===
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -107,13 +107,13 @@ class _TicketCardState extends State<TicketCard> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // JUDUL EVENT BESAR
+                            // JUDUL EVENT
                             Text(
                               ticket.eventTitle,
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: isVIP ? const Color(0xFFFFE082) : Colors.blue,
+                                color: isVIP ? const Color(0xFFFFE082) : Colors.white,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.5,
@@ -129,6 +129,7 @@ class _TicketCardState extends State<TicketCard> {
                             ),
                             
                             const Spacer(),
+                            
                             Divider(color: Colors.white.withOpacity(0.1), thickness: 1),
                             const SizedBox(height: 8),
 
@@ -150,8 +151,8 @@ class _TicketCardState extends State<TicketCard> {
                                 const SizedBox(width: 4),
                                 Text(
                                     isAvailable
-                                        ? "${ticket.available} Tersedia"
-                                        : "Habis Terjual",
+                                        ? "${ticket.available} Available" // EN
+                                        : "Sold Out", // EN
                                     style: TextStyle(
                                         color: isAvailable ? Colors.grey : Colors.red,
                                         fontSize: 11)),
@@ -185,9 +186,11 @@ class _TicketCardState extends State<TicketCard> {
                                       widget.onBook();
                                     }
                                   : null,
-                              child: Text(isAvailable ? "Pesan Sekarang" : "Habis",
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold, fontSize: 13)),
+                              child: Text(
+                                isAvailable ? "Book Now" : "Sold Out", // EN
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold, fontSize: 13),
+                              ),
                             ),
                           ),
                           if (widget.request.loggedIn && widget.ticket.canEdit) ...[
