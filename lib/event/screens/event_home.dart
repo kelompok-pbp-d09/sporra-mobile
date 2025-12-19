@@ -7,6 +7,32 @@ import 'package:sporra_mobile/event/screens/event_form.dart';
 import 'package:sporra_mobile/event/screens/event_detail.dart';
 import 'package:sporra_mobile/widgets/left_drawer.dart';
 
+class FadeInStaggered extends StatelessWidget {
+  final Widget child;
+  final int index;
+
+  const FadeInStaggered({super.key, required this.child, required this.index});
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 400 + (index * 100)),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+}
+
 class EventHomePage extends StatefulWidget {
   final bool isEmbedded;
   const EventHomePage({super.key, this.isEmbedded = false});
@@ -34,14 +60,14 @@ class EventHomePageState extends State<EventHomePage> {
   final int eventsPerPage = 6;
 
   final List<Map<String, String>> categories = [
-    {'value': 'basket', 'display': 'Basket'},
-    {'value': 'tennis', 'display': 'Tennis'},
-    {'value': 'bulu tangkis', 'display': 'Bulu Tangkis'},
-    {'value': 'volley', 'display': 'Volley'},
-    {'value': 'futsal', 'display': 'Futsal'},
-    {'value': 'sepak bola', 'display': 'Sepak Bola'},
-    {'value': 'renang', 'display': 'Renang'},
-    {'value': 'lainnya', 'display': 'Lainnya'},
+    {'label': 'Basket', 'value': 'basket'},
+    {'label': 'Tennis', 'value': 'tennis'},
+    {'label': 'Bulu Tangkis', 'value': 'bulu tangkis'},
+    {'label': 'Volley', 'value': 'volley'},
+    {'label': 'Futsal', 'value': 'futsal'},
+    {'label': 'Sepak Bola', 'value': 'sepak bola'},
+    {'label': 'Renang', 'value': 'renang'},
+    {'label': 'Lainnya', 'value': 'lainnya'},
   ];
 
   @override
@@ -53,11 +79,9 @@ class EventHomePageState extends State<EventHomePage> {
   Future<void> loadEvents() async {
     setState(() => isLoading = true);
     final request = context.read<CookieRequest>();
-
     try {
       String url = 'https://afero-aqil-sporra.pbp.cs.ui.ac.id/event/json/';
       final response = await request.get(url);
-
       if (mounted) {
         allUpcomingEvents = (response['upcoming_events'] as List)
             .map((item) => Event.fromJson(item))
@@ -65,24 +89,12 @@ class EventHomePageState extends State<EventHomePage> {
         allPastEvents = (response['past_events'] as List)
             .map((item) => Event.fromJson(item))
             .toList();
-
-        if (response['current_user_id'] != null) {
-          currentUserId = response['current_user_id'];
-        } else {
-          currentUserId = null;
-        }
-
+        currentUserId = response['current_user_id'];
         applyFilter();
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -92,13 +104,16 @@ class EventHomePageState extends State<EventHomePage> {
         upcomingEvents = List.from(allUpcomingEvents);
         pastEvents = List.from(allPastEvents);
       } else {
-        upcomingEvents = allUpcomingEvents.where((event) {
-          return event.kategori.toLowerCase() == currentCategory.toLowerCase();
-        }).toList();
-
-        pastEvents = allPastEvents.where((event) {
-          return event.kategori.toLowerCase() == currentCategory.toLowerCase();
-        }).toList();
+        upcomingEvents = allUpcomingEvents
+            .where(
+              (e) => e.kategori.toLowerCase() == currentCategory.toLowerCase(),
+            )
+            .toList();
+        pastEvents = allPastEvents
+            .where(
+              (e) => e.kategori.toLowerCase() == currentCategory.toLowerCase(),
+            )
+            .toList();
       }
     });
   }
@@ -110,9 +125,7 @@ class EventHomePageState extends State<EventHomePage> {
   }
 
   void changePage(int page) {
-    setState(() {
-      currentPage = page;
-    });
+    setState(() => currentPage = page);
   }
 
   void toggleEventView(bool isPast) {
@@ -127,245 +140,184 @@ class EventHomePageState extends State<EventHomePage> {
   Future<void> deleteEvent(String eventId) async {
     final request = context.read<CookieRequest>();
     try {
-      await request.post(
+      final response = await request.post(
         'https://afero-aqil-sporra.pbp.cs.ui.ac.id/event/event/$eventId/delete/',
         {},
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Event berhasil dihapus!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        loadEvents();
+        if (response['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Event berhasil dihapus!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          loadEvents();
+        }
       }
     } catch (e) {}
-  }
-
-  void showDeleteDialog(Event event) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: cardDark,
-        title: const Text(
-          'Delete Event?',
-          style: TextStyle(color: Colors.white),
-        ),
-        content: Text(
-          'Delete "${event.judul}"?',
-          style: const TextStyle(color: Colors.grey),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              deleteEvent(event.id);
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget buildEventToggle() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(4),
+      height: 50,
       decoration: BoxDecoration(
         color: cardDark,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey[800]!),
       ),
-      child: Row(
+      child: Stack(
         children: [
-          Expanded(
-            child: GestureDetector(
-              onTap: () => toggleEventView(false),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
+          AnimatedAlign(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOutCubic,
+            alignment: showPastEvents
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: 0.5,
+              child: Container(
+                margin: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: !showPastEvents ? accentBlue : Colors.transparent,
+                  color: accentBlue,
                   borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  'Upcoming',
-                  style: TextStyle(
-                    color: !showPastEvents ? Colors.white : Colors.grey[400],
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ),
           ),
-          Expanded(
-            child: GestureDetector(
-              onTap: () => toggleEventView(true),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                decoration: BoxDecoration(
-                  color: showPastEvents ? accentBlue : Colors.transparent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  'Past Events',
-                  style: TextStyle(
-                    color: showPastEvents ? Colors.white : Colors.grey[400],
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+          Row(
+            children: [
+              _buildToggleButtonChild(
+                'Upcoming',
+                !showPastEvents,
+                () => toggleEventView(false),
               ),
-            ),
+              _buildToggleButtonChild(
+                'Past Events',
+                showPastEvents,
+                () => toggleEventView(true),
+              ),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildToggleButtonChild(
+    String text,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Center(
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 200),
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.grey[400],
+              fontWeight: FontWeight.bold,
+            ),
+            child: Text(text),
+          ),
+        ),
       ),
     );
   }
 
   Widget buildCategoryFilters() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: ChoiceChip(
-              label: const Text('All'),
-              selected: currentCategory.isEmpty,
-              onSelected: (_) => changeCategory(''),
-              backgroundColor: cardDark,
-              selectedColor: accentBlue,
-              labelStyle: TextStyle(
-                color: currentCategory.isEmpty
-                    ? Colors.white
-                    : Colors.grey[400],
-                fontWeight: currentCategory.isEmpty
-                    ? FontWeight.bold
-                    : FontWeight.normal,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: currentCategory.isEmpty
-                      ? accentBlue
-                      : Colors.grey[800]!,
-                ),
-              ),
-              showCheckmark: false,
-            ),
-          ),
-          ...categories.map(
-            (cat) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(cat['display']!),
-                selected: currentCategory == cat['value'],
-                onSelected: (_) => changeCategory(cat['value']!),
-                backgroundColor: cardDark,
-                selectedColor: accentBlue,
-                labelStyle: TextStyle(
-                  color: currentCategory == cat['value']
-                      ? Colors.white
-                      : Colors.grey[400],
-                  fontWeight: currentCategory == cat['value']
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20),
-                  side: BorderSide(
-                    color: currentCategory == cat['value']
-                        ? accentBlue
-                        : Colors.grey[800]!,
-                  ),
-                ),
-                showCheckmark: false,
+    return Container(
+      color: bgDark,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: _buildChip(
+                'All',
+                currentCategory.isEmpty,
+                () => changeCategory(''),
               ),
             ),
-          ),
-        ],
+            ...categories.map((category) {
+              final isSelected = currentCategory == category['value'];
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: _buildChip(
+                  category['label']!,
+                  isSelected,
+                  () => changeCategory(category['value']!),
+                ),
+              );
+            }).toList(),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildChip(String label, bool isSelected, VoidCallback onSelected) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onSelected(),
+      backgroundColor: cardDark,
+      selectedColor: accentBlue,
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.grey[400],
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: isSelected ? accentBlue : Colors.grey[800]!),
+      ),
+      showCheckmark: false,
     );
   }
 
   Widget buildPaginationControls(int totalPages) {
     if (totalPages <= 1) return const SizedBox.shrink();
-
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       child: Center(
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              IconButton(
+              _buildIconButton(
+                icon: Icons.first_page,
                 onPressed: currentPage > 1 ? () => changePage(1) : null,
-                icon: const Icon(Icons.first_page), // Icon <<
-                tooltip: 'First Page',
-                style: IconButton.styleFrom(
-                  backgroundColor: currentPage > 1
-                      ? Colors.grey[700]
-                      : const Color.fromARGB(255, 213, 211, 211),
-                  foregroundColor: currentPage > 1
-                      ? Colors.white
-                      : Colors.grey[700],
-                  disabledBackgroundColor: Colors.grey[900],
-                ),
               ),
-
-              const SizedBox(width: 12),
-              _buildPageButton(1, isActive: currentPage == 1),
-
-              if (currentPage > 3)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text('...', style: TextStyle(color: Colors.grey[400])),
-                ),
-
-              for (int i = currentPage - 1; i <= currentPage + 1; i++)
-                if (i > 1 && i < totalPages)
-                  _buildPageButton(i, isActive: currentPage == i),
-
-              if (currentPage < totalPages - 2)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text('...', style: TextStyle(color: Colors.grey[400])),
-                ),
-
-              if (totalPages > 1)
-                _buildPageButton(
-                  totalPages,
-                  isActive: currentPage == totalPages,
-                ),
-
-              const SizedBox(width: 12),
-              IconButton(
+              const SizedBox(width: 8),
+              ...List.generate(totalPages, (index) {
+                int page = index + 1;
+                if (page == 1 ||
+                    page == totalPages ||
+                    (page >= currentPage - 1 && page <= currentPage + 1)) {
+                  return _buildPageButton(page, isActive: currentPage == page);
+                }
+                if (page == currentPage - 2 || page == currentPage + 2) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    child: Text("...", style: TextStyle(color: Colors.white)),
+                  );
+                }
+                return const SizedBox.shrink();
+              }).toList(),
+              const SizedBox(width: 8),
+              _buildIconButton(
+                icon: Icons.last_page,
                 onPressed: currentPage < totalPages
                     ? () => changePage(totalPages)
                     : null,
-                icon: const Icon(Icons.last_page),
-                tooltip: 'Last Page',
-                style: IconButton.styleFrom(
-                  backgroundColor: currentPage < totalPages
-                      ? Colors.grey[700]
-                      : const Color.fromARGB(255, 213, 211, 211),
-                  foregroundColor: currentPage < totalPages
-                      ? Colors.white
-                      : Colors.grey[700],
-                  disabledBackgroundColor: Colors.grey[900],
-                ),
               ),
             ],
           ),
@@ -374,33 +326,77 @@ class EventHomePageState extends State<EventHomePage> {
     );
   }
 
+  Widget _buildIconButton({required IconData icon, VoidCallback? onPressed}) {
+    return IconButton(
+      onPressed: onPressed,
+      icon: Icon(icon),
+      style: IconButton.styleFrom(
+        backgroundColor: cardDark,
+        foregroundColor: Colors.white,
+      ),
+    );
+  }
+
   Widget _buildPageButton(int page, {bool isActive = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: InkWell(
-        onTap: isActive ? null : () => changePage(page),
-        borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 40,
-          height: 40,
+      child: GestureDetector(
+        onTap: () => changePage(page),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: isActive ? Colors.blue[600] : Colors.grey[700],
+            color: isActive ? accentBlue : cardDark,
             borderRadius: BorderRadius.circular(8),
-            border: isActive
-                ? Border.all(color: Colors.blue[400]!, width: 2)
-                : null,
+            border: Border.all(
+              color: isActive ? accentBlue : Colors.grey[800]!,
+            ),
           ),
-          child: Center(
-            child: Text(
-              '$page',
+          child: Text("$page", style: const TextStyle(color: Colors.white)),
+        ),
+      ),
+    );
+  }
+
+  void showDeleteDialog(Event event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: cardDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text(
+          'Delete Event?',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          'Event will be permanently deleted.',
+          style: TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: Colors.white)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              deleteEvent(event.id);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Hapus',
               style: TextStyle(
                 color: Colors.white,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                fontSize: isActive ? 16 : 14,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -410,10 +406,14 @@ class EventHomePageState extends State<EventHomePage> {
     final eventsToDisplay = showPastEvents ? pastEvents : upcomingEvents;
     final startIdx = (currentPage - 1) * eventsPerPage;
     final endIdx = startIdx + eventsPerPage;
-    final paginatedEvents = eventsToDisplay.sublist(
-      startIdx,
-      endIdx > eventsToDisplay.length ? eventsToDisplay.length : endIdx,
-    );
+    final int safeStart = startIdx >= eventsToDisplay.length ? 0 : startIdx;
+    final int safeEnd = endIdx > eventsToDisplay.length
+        ? eventsToDisplay.length
+        : endIdx;
+
+    final paginatedEvents = eventsToDisplay.isEmpty
+        ? <Event>[]
+        : eventsToDisplay.sublist(safeStart, safeEnd);
     final totalPages = (eventsToDisplay.length / eventsPerPage).ceil();
 
     Widget bodyContent = isLoading
@@ -423,108 +423,82 @@ class EventHomePageState extends State<EventHomePage> {
             child: ListView(
               children: [
                 const SizedBox(height: 16),
-
                 buildEventToggle(),
-
                 const SizedBox(height: 16),
-
                 buildCategoryFilters(),
-
-                const SizedBox(height: 8),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    showPastEvents ? 'Past Event' : 'Upcoming Event',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: showPastEvents ? Colors.grey : Colors.white,
-                    ),
-                  ),
-                ),
-
-                if (paginatedEvents.isNotEmpty) ...[
-                  ...paginatedEvents.map(
-                    (event) => EventCard(
-                      event: event,
-                      isPast: showPastEvents,
-                      currentUserId: currentUserId,
-                      onTapDetail: () async {
-                        final result = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EventDetailPage(
-                              event: event,
-                              hasEnded: showPastEvents,
-                              isOwnerOrAdmin:
-                                  currentUserId != null &&
-                                  currentUserId == event.userId,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0, 0.05),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Column(
+                    key: ValueKey('${showPastEvents}_$currentCategory'),
+                    children: [
+                      if (paginatedEvents.isNotEmpty)
+                        ...paginatedEvents.asMap().entries.map(
+                          (entry) => FadeInStaggered(
+                            index: entry.key,
+                            key: ValueKey(entry.value.id),
+                            child: EventCard(
+                              event: entry.value,
+                              isPast: showPastEvents,
+                              currentUserId: currentUserId,
+                              onTapDetail: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EventDetailPage(
+                                      event: entry.value,
+                                      hasEnded: showPastEvents,
+                                      isOwnerOrAdmin:
+                                          currentUserId == entry.value.userId,
+                                    ),
+                                  ),
+                                );
+                                if (mounted) loadEvents();
+                              },
+                              onDelete: () => showDeleteDialog(entry.value),
                             ),
                           ),
-                        );
-                        if (mounted) {
-                          loadEvents();
-                        }
-                      },
-                      onDelete: () => showDeleteDialog(event),
-                    ),
+                        )
+                      else
+                        const Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Text(
+                            "No Event",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                    ],
                   ),
-                ] else ...[
-                  const Padding(
-                    padding: EdgeInsets.all(40),
-                    child: Center(
-                      child: Text(
-                        "No Event",
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                ],
-
+                ),
                 buildPaginationControls(totalPages),
-
-                const SizedBox(height: 20),
               ],
             ),
           );
 
     final request = context.watch<CookieRequest>();
 
-    if (widget.isEmbedded) {
-      return Container(color: bgDark, child: bodyContent);
-    } else {
-      return Scaffold(
-        backgroundColor: bgDark,
-        appBar: AppBar(
-          title: const Text('Event Home'),
-          backgroundColor: cardDark,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
-
-        drawer: const LeftDrawer(),
-
-        body: bodyContent,
-        floatingActionButton: request.loggedIn
-            ? FloatingActionButton(
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const EventFormPage(),
-                    ),
-                  );
-                  if (mounted) loadEvents();
-                },
-                backgroundColor: Colors.blue[700],
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                child: const Icon(Icons.add, size: 28),
-              )
-            : null,
-      );
-    }
+    return Scaffold(
+      backgroundColor: bgDark,
+      appBar: widget.isEmbedded
+          ? null
+          : AppBar(
+              title: const Text('Event Home'),
+              backgroundColor: cardDark,
+              foregroundColor: Colors.white,
+            ),
+      drawer: widget.isEmbedded ? null : const LeftDrawer(),
+      body: bodyContent,
+    );
   }
 }
