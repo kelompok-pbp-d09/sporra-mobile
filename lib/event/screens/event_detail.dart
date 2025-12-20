@@ -95,6 +95,9 @@ class _EventDetailPageState extends State<EventDetailPage> {
     return Scaffold(
       backgroundColor: _bgPrimary,
       body: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         slivers: [
           SliverAppBar(
             expandedHeight: 200.0,

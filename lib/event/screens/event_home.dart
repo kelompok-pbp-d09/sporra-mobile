@@ -421,6 +421,9 @@ class EventHomePageState extends State<EventHomePage> {
         : RefreshIndicator(
             onRefresh: loadEvents,
             child: ListView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
               children: [
                 const SizedBox(height: 16),
                 buildEventToggle(),

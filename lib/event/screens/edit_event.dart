@@ -157,6 +157,9 @@ class _EventEditPageState extends State<EventEditPage> {
       ),
       body: Center(
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           padding: const EdgeInsets.all(20),
           child: Card(
             elevation: 12,
