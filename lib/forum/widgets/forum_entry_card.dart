@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/authentication/login.dart';
@@ -18,6 +16,7 @@ class ForumEntryCard extends StatefulWidget {
   final Color accentBlue;
   final Color textPrimary;
   final ForumRefresh? onRefresh;
+  final VoidCallback? onLoaded;
 
   const ForumEntryCard({
     super.key,
@@ -26,6 +25,7 @@ class ForumEntryCard extends StatefulWidget {
     required this.accentBlue,
     required this.textPrimary,
     this.onRefresh,
+    this.onLoaded,
   });
 
   @override
@@ -39,10 +39,42 @@ class ForumEntryCardState extends State<ForumEntryCard> {
   List<dynamic> comments = [];
   String sort = "Best";
 
+  int? _highlightCommentId;
+  bool _highlightForum = false;
+
+  final Map<int, GlobalKey> _commentKeys = {};
+  final GlobalKey _forumSectionKey = GlobalKey();
+
+
   @override
   void initState() {
     super.initState();
     fetchForum();
+  }
+
+  void scrollToForum() {
+    setState(() {
+      _highlightForum = true;
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _forumSectionKey.currentContext;
+      if (ctx != null) {
+        Scrollable.ensureVisible(
+          ctx,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() {
+          _highlightForum = false;
+        });
+      }
+    });
   }
 
   Future<void> refresh() async => fetchForum();
@@ -79,6 +111,11 @@ class ForumEntryCardState extends State<ForumEntryCard> {
               .toList()
               ?? [];
 
+      for (final c in safeComments) {
+        final int commentId = c["id"] as int;
+        _commentKeys.putIfAbsent(commentId, () => GlobalKey());
+      }
+
       setState(() {
         comments = safeComments;
         topForums = safeTopForums;
@@ -86,7 +123,11 @@ class ForumEntryCardState extends State<ForumEntryCard> {
         _applySorting();
         isLoading = false;
       });
-    } catch (e, s) {
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onLoaded?.call();
+      });
+    } catch (e) {
       setState(() {
         isLoading = false;
       });
@@ -170,9 +211,9 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     int prev = idx != -1 ? comments[idx]["user_vote"] ?? 0 : 0;
 
     String type;
-    if (value == 1) type = "up";
-    else if (value == -1) type = "down";
-    else type = prev == 1 ? "up" : prev == -1 ? "down" : "up";
+    if (value == 1) { type = "up";}
+    else if (value == -1) { type = "down"; }
+    else type = prev == 1 ?  "up" : prev == -1 ? "down" : "up";
 
     final res = await req.post(
       "https://afero-aqil-sporra.pbp.cs.ui.ac.id/forum/post/$id/vote/",
@@ -248,6 +289,34 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     );
   }
 
+  void _scrollToComment(int commentId) {
+    setState(() {
+      _highlightCommentId = commentId;
+    });
+
+    // tunggu 2 frame biar layout bener-bener siap
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctx = _commentKeys[commentId]?.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _highlightCommentId = null);
+      }
+    });
+  }
+
+
+
   // HEADER
   Widget _buildHeader() {
     return Padding(
@@ -310,18 +379,52 @@ class ForumEntryCardState extends State<ForumEntryCard> {
               _buildEmptyState(),
 
             if (comments.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: comments.length,
-                itemBuilder: (_, i) => _buildCommentCard(comments[i]),
+              AnimatedContainer(
+                key: _forumSectionKey,
+                duration: const Duration(milliseconds: 600),
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: _highlightForum
+                      ? widget.accentBlue.withOpacity(0.08)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  border: _highlightForum
+                      ? Border.all(
+                    color: widget.accentBlue.withOpacity(0.5),
+                    width: 1.2,
+                  )
+                      : null,
+                ),
+                child: Column(
+                  children: comments.map((c) => _buildCommentCard(c)).toList(),
+                ),
               ),
 
-            // 🔥 FORM TAMBAH KOMENTAR
+            // FORM TAMBAH KOMENTAR
             ForumForm(
               articleId: widget.articleId,
               onSuccess: () async {
                 await fetchForum();
+                // cari komentar terbaru berdasarkan created_at
+                Map<String, dynamic>? newest;
+
+                for (final c in comments) {
+                  if (newest == null) {
+                    newest = c;
+                  } else {
+                    final da = DateTime.parse(c["created_at"] as String);
+                    final db = DateTime.parse(newest["created_at"] as String);
+                    if (da.isAfter(db)) {
+                      newest = c;
+                    }
+                  }
+                }
+
+                if (newest != null) {
+                  _scrollToComment(newest["id"] as int);
+                }
+
               },
             ),
 
@@ -377,113 +480,180 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     final currentUser = request.jsonData["username"];
     final isOwner = c["author"] == currentUser;
     final canModify = c["can_modify"] ?? false;
+    _commentKeys.putIfAbsent(c["id"], () => GlobalKey());
 
+    return Dismissible(
+      key: ValueKey(c["id"]),
+      direction: (isOwner || canModify)
+          ? DismissDirection.horizontal
+          : DismissDirection.none,
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: widget.cardBg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF262626)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // LEFT VOTE COLUMN
-          Column(
-            children: [
-              GestureDetector(
-                onTap: () => _voteComment(c["id"], 1),
-                child: Icon(
-                  Icons.keyboard_arrow_up,
-                  size: 28,
-                  color: c["user_vote"] == 1 ? Colors.blue : Colors.grey[400],
-                ),
-              ),
-              Text(
-                (c["score"] ?? 0).toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-              ),
-              GestureDetector(
-                onTap: () => _voteComment(c["id"], -1),
-                child: Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 28,
-                  color: c["user_vote"] == -1 ? Colors.red : Colors.grey[700],
-                ),
-              ),
-            ],
-          ),
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          _showEditDialog(c);
+          return false;
+        } else if (direction == DismissDirection.endToStart) {
+          _confirmDelete(c);
+          return false;
+        }
+        return false;
+      },
 
-          const SizedBox(width: 12),
+      background: _swipeEditBackground(),
+      secondaryBackground: _swipeDeleteBackground(),
 
-          // COMMENT BODY
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: AnimatedContainer(
+        key: _commentKeys[c["id"]],
+        duration: const Duration(milliseconds: 600),
+        decoration: BoxDecoration(
+          color: _highlightCommentId == c["id"]
+              ? widget.accentBlue.withOpacity(0.15)
+              : widget.cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF262626)),
+        ),
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ================= LEFT VOTE COLUMN =================
+            Column(
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Row(
-                        children: [
-                          Text(
-                            c["author"] ?? "unknown",
-                            style: TextStyle(
-                              color: widget.accentBlue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            "• ${timeAgo(created)}",
-                            style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                          ),
-                        ],
-                      ),
+                GestureDetector(
+                  onTap: () => _voteComment(c["id"], 1),
+                  child: AnimatedScale(
+                    scale: c["user_vote"] == 1 ? 1.25 : 1.0,
+                    duration: const Duration(milliseconds: 150),
+                    child: Icon(
+                      Icons.keyboard_arrow_up,
+                      size: 28,
+                      color: c["user_vote"] == 1
+                          ? Colors.blue
+                          : Colors.grey[400],
                     ),
-
-                    // Popup menu stays vertically centered
-                    if (isOwner || canModify)
-                      PopupMenuButton<int>(
-                        icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 18),
-                        color: widget.cardBg,
-                        onSelected: (value) {
-                          if (value == 1) _showEditDialog(c);
-                          if (value == 2) _confirmDelete(c);
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 1,
-                            child: Text("Edit", style: TextStyle(color: Colors.white)),
-                          ),
-                          const PopupMenuItem(
-                            value: 2,
-                            child: Text("Delete", style: TextStyle(color: Colors.redAccent)),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
-
-                const SizedBox(height: 6),
-
-                Text(
-                  c["content"] ?? "",
-                  style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.4),
+                  ),
                 ),
 
                 const SizedBox(height: 2),
+
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 150),
+                  transitionBuilder: (child, animation) =>
+                      ScaleTransition(scale: animation, child: child),
+                  child: Text(
+                    (c["score"] ?? 0).toString(),
+                    key: ValueKey(c["score"]),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 2),
+
+                GestureDetector(
+                  onTap: () => _voteComment(c["id"], -1),
+                  child: AnimatedScale(
+                    scale: c["user_vote"] == -1 ? 1.25 : 1.0,
+                    duration: const Duration(milliseconds: 150),
+                    child: Icon(
+                      Icons.keyboard_arrow_down,
+                      size: 28,
+                      color: c["user_vote"] == -1
+                          ? Colors.red
+                          : Colors.grey[700],
+                    ),
+                  ),
+                ),
               ],
             ),
-          ),
-        ],
+
+            const SizedBox(width: 12),
+
+            // ================= COMMENT BODY =================
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // HEADER (AUTHOR + TIME + MENU)
+                  Row(
+                    children: [
+                      Text(
+                        c["author"] ?? "unknown",
+                        style: TextStyle(
+                          color: widget.accentBlue,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "• ${timeAgo(created)}",
+                        style: TextStyle(
+                          color: Colors.grey[500],
+                          fontSize: 12,
+                        ),
+                      ),
+                      const Spacer(),
+
+                      if (isOwner || canModify)
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: PopupMenuButton<int>(
+                            padding: EdgeInsets.zero,
+                            splashRadius: 18,
+                            tooltip: "More",
+                            icon: Icon(
+                              Icons.more_vert,
+                              size: 18,
+                              color: Colors.grey[400],
+                            ),
+                            color: widget.cardBg,
+                            onSelected: (value) {
+                              if (value == 1) _showEditDialog(c);
+                              if (value == 2) _confirmDelete(c);
+                            },
+                            itemBuilder: (_) => const [
+                              PopupMenuItem(
+                                value: 1,
+                                child: Text("Edit",
+                                    style: TextStyle(color: Colors.white)),
+                              ),
+                              PopupMenuItem(
+                                value: 2,
+                                child: Text("Delete",
+                                    style: TextStyle(color: Colors.redAccent)),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 6),
+
+                  // COMMENT TEXT
+                  Text(
+                    c["content"] ?? "",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
+
 
   Widget _buildTopForums() {
     if (topForums.isEmpty) return const SizedBox();
@@ -494,7 +664,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Top Forum",
+            "Top Discussions",
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -519,7 +689,10 @@ class ForumEntryCardState extends State<ForumEntryCard> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => NewsDetailPage(news: news),
+                    builder: (_) => NewsDetailPage(
+                      news: news,
+                      scrollToForum: true,
+                    ),
                   ),
                 );
               },
@@ -572,9 +745,6 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     );
   }
 
-
-
-
   Widget _buildHottestArticles() {
     if (hottestArticles.isEmpty) return const SizedBox();
 
@@ -584,7 +754,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "Hot Articles",
+            "See Others",
             style: TextStyle(
               color: Colors.white,
               fontSize: 20,
@@ -594,25 +764,86 @@ class ForumEntryCardState extends State<ForumEntryCard> {
           const SizedBox(height: 12),
 
           ...hottestArticles.map((news) {
-            return InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => NewsDetailPage(news: news),
-                  ),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Text(
-                  news.fields.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                  ),
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: widget.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF27272A)),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => NewsDetailPage(news: news),
+                    ),
+                  );
+                },
+                child: Row(
+                  children: [
+                    // THUMBNAIL
+                    if (news.fields.thumbnail.isNotEmpty)
+                      ClipRRect(
+                        borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(12),
+                        ),
+                        child: Image.network(
+                          'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                          width: 110,
+                          height: 90,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            width: 110,
+                            height: 90,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                      )
+                    else
+                      Container(
+                        width: 110,
+                        height: 90,
+                        decoration: BoxDecoration(
+                          color: widget.accentBlue.withOpacity(0.2),
+                          borderRadius: const BorderRadius.horizontal(
+                            left: Radius.circular(12),
+                          ),
+                        ),
+                        child: const Icon(Icons.article, color: Colors.white70),
+                      ),
+
+                    // TEXT
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              news.fields.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              news.fields.author,
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -622,6 +853,29 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     );
   }
 
+  Widget _swipeEditBackground() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.only(left: 20),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(Icons.edit, color: Colors.blue),
+    );
+  }
 
-
+  Widget _swipeDeleteBackground() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.only(right: 20),
+      alignment: Alignment.centerRight,
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(Icons.delete, color: Colors.redAccent),
+    );
+  }
 }
