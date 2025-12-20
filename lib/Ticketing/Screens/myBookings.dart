@@ -15,18 +15,22 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   final String baseUrl = "https://afero-aqil-sporra.pbp.cs.ui.ac.id";
 
   List<Booking> _bookings = [];
+  List<Booking> _filteredBookings = []; // List untuk hasil search
   bool _isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(_filterBookings); // Listener Search
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final request = context.read<CookieRequest>();
 
       if (!request.loggedIn) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text("Please login to view your booked events!"), // EN
+            content: Text("Please login to view your booked events!"),
             backgroundColor: Colors.red,
           ),
         );
@@ -42,6 +46,25 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     });
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // === SEARCH LOGIC ===
+  void _filterBookings() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredBookings = _bookings.where((booking) {
+        return booking.eventTitle.toLowerCase().contains(query) ||
+            booking.ticketType.toLowerCase().contains(query) ||
+            booking.id.toString().contains(query);
+      }).toList();
+    });
+  }
+
+  // === DATA FETCHING ===
   Future<void> fetchBookings() async {
     final request = context.read<CookieRequest>();
     setState(() => _isLoading = true);
@@ -53,6 +76,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       if (mounted) {
         setState(() {
           _bookings = bookingEntry.bookings;
+          _filteredBookings = bookingEntry.bookings; // Reset filter saat fetch baru
           _isLoading = false;
         });
       }
@@ -61,7 +85,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load data: $e")), // EN
+          SnackBar(content: Text("Failed to load data: $e")),
         );
       }
     }
@@ -71,36 +95,136 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
     await fetchBookings();
   }
 
+  // === POPUP DETAIL (QR CODE) ===
+  void _showTicketDetail(Booking booking) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1F2937),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("E-Ticket",
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20)),
+              const SizedBox(height: 20),
+              // MOCKUP QR CODE
+              Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.qr_code_2, size: 120, color: Colors.black),
+                      const SizedBox(height: 8),
+                      Text("ID: ${booking.id}",
+                          style: const TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16)),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(booking.eventTitle,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: Colors.blueAccent,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold)),
+              const SizedBox(height: 5),
+              Text("${booking.quantity}x ${booking.ticketType.toUpperCase()} Ticket",
+                  style: const TextStyle(color: Colors.white70)),
+              const SizedBox(height: 15),
+              const Text(
+                  "Show this QR Code at the venue entrance to verify your booking.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close", style: TextStyle(color: Colors.white)),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  // === UI BUILDER ===
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF111827),
       appBar: AppBar(
-        title: const Text("My Bookings"), // EN
+        title: const Text("My Bookings"),
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _refresh,
-              color: Colors.white,
-              backgroundColor: Colors.blue[700],
-              child: _bookings.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _bookings.length,
-                      itemBuilder: (context, index) {
-                        final booking = _bookings[index];
-                        return _StaggeredItem(
-                          index: index,
-                          child: _buildBookingCard(booking),
-                        );
-                      },
-                    ),
+      body: Column(
+        children: [
+          // 1. SEARCH BAR
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: "Search bookings...",
+                hintStyle: TextStyle(color: Colors.grey[400]),
+                filled: true,
+                fillColor: const Color(0xFF1F2937),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none),
+              ),
             ),
+          ),
+
+          // 2. LIST VIEW
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : RefreshIndicator(
+                    onRefresh: _refresh,
+                    color: Colors.white,
+                    backgroundColor: Colors.blue[700],
+                    child: _filteredBookings.isEmpty
+                        ? _buildEmptyState()
+                        : ListView.builder(
+                            physics: const AlwaysScrollableScrollPhysics(
+                              parent: BouncingScrollPhysics(),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: _filteredBookings.length,
+                            itemBuilder: (context, index) {
+                              final booking = _filteredBookings[index];
+                              return _StaggeredItem(
+                                index: index,
+                                child: GestureDetector(
+                                  onTap: () => _showTicketDetail(booking),
+                                  child: _buildBookingCard(booking),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -124,17 +248,18 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   ),
                   const SizedBox(height: 16),
                   const Text(
-                    "You haven't booked any tickets yet.", // EN
+                    "No bookings found.",
                     style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(context); // Kembali ke Home/Tickets
                     },
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[800]),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue[800]),
                     child: const Text(
-                      "Find Tickets", // EN
+                      "Find Tickets",
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
@@ -182,7 +307,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.blue[900]?.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8),
@@ -209,12 +335,13 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      "Ticket Type", // EN
+                      "Ticket Type",
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: booking.ticketType.toLowerCase() == 'vip'
                             ? Colors.amber[900]
@@ -236,7 +363,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     const Text(
-                      "Quantity", // EN
+                      "Quantity",
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
@@ -268,7 +395,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "Total Price", // EN
+                        "Total Price",
                         style: TextStyle(color: Colors.green, fontSize: 12),
                       ),
                       Text(
@@ -285,7 +412,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       const Text(
-                        "Booked on", // EN
+                        "Booked on",
                         style: TextStyle(color: Colors.grey, fontSize: 10),
                       ),
                       Text(
@@ -325,7 +452,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
   }
 }
 
-// === WIDGET ANIMASI (SAMA SEPERTI ALLTICKETSPAGE) ===
+// === WIDGET ANIMASI ===
 class _StaggeredItem extends StatefulWidget {
   final int index;
   final Widget child;
@@ -353,11 +480,10 @@ class _StaggeredItemState extends State<_StaggeredItem>
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
 
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.5), // Slide dari bawah ke posisi awal
+      begin: const Offset(0, 0.5),
       end: Offset.zero,
     ).animate(_animation);
 
-    // Delay animasi berdasarkan index (Cascade Effect)
     Future.delayed(Duration(milliseconds: widget.index * 100), () {
       if (mounted) _controller.forward();
     });

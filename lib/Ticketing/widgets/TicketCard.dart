@@ -68,7 +68,7 @@ class _TicketCardState extends State<TicketCard> {
                     angle: -0.2, // Miringkan sedikit
                     child: Icon(
                       isVIP ? Icons.star : Icons.confirmation_number,
-                      size: 140, // Ukuran SANGAT BESAR
+                      size: 250, 
                       color: isVIP
                           ? Colors.amber.withOpacity(0.05)
                           : Colors.white.withOpacity(0.03),
@@ -113,7 +113,7 @@ class _TicketCardState extends State<TicketCard> {
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
-                                color: isVIP ? const Color(0xFFFFE082) : Colors.white,
+                                color: isVIP ? const Color(0xFFFFE082) : Colors.blue,
                                 fontSize: 22,
                                 fontWeight: FontWeight.w900,
                                 letterSpacing: 0.5,

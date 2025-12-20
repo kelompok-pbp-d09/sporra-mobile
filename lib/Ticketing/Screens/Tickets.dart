@@ -231,7 +231,9 @@ class AllTicketsPageState extends State<AllTicketsPage> {
                   child: _filteredTickets.isEmpty
                       ? _buildEmptyState() 
                       : GridView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
+                      physics: const AlwaysScrollableScrollPhysics(
+                          parent: BouncingScrollPhysics(), 
+                        ),
                           padding: const EdgeInsets.all(12),
                           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
