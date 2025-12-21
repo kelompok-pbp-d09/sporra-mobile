@@ -177,11 +177,12 @@ Proses integrasi ini membuat alur aplikasi menjadi **mulus, real-time, dan aman*
 
 ---
 
-# 🔗 **Link APK & Desain**
+# 🔗 **Link APK, desain, dan promosi**
 
 * **Link APK:** *(menyusul)*
 * **Link Figma:** *https://www.figma.com/design/kZpLlZVnWPINsl4yttEgwk/SPORRA?node-id=0-1&t=rX4dCHUFBjM6lUuC-1*
-
+* **Link Promosi:** *https://drive.google.com/drive/folders/1Sgw6C0NB88xDuvwF6QT8Ox-a4TreOZaM*
+  
 ---
 
 # 📰 **Blog**
