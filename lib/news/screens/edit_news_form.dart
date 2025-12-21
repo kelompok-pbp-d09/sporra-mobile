@@ -40,13 +40,13 @@ class _EditNewsPageState extends State<EditNewsPage> {
     _title = widget.news.fields.title;
     _content = widget.news.fields.content;
     _thumbnail = widget.news.fields.thumbnail;
-    
+
     String existingCategory = "football"; // Default fallback
-    
+
     if (_categories.contains(existingCategory)) {
-        _category = existingCategory;
+      _category = existingCategory;
     } else {
-        _category = _categories.first;
+      _category = _categories.first;
     }
   }
 
@@ -187,7 +187,7 @@ class _EditNewsPageState extends State<EditNewsPage> {
                       );
 
                       if (context.mounted) {
-                        if (response['status'] == 'success') {
+                        if (response['status'] == true) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("News successfully updated!"),
@@ -198,7 +198,7 @@ class _EditNewsPageState extends State<EditNewsPage> {
                           Navigator.pushAndRemoveUntil(
                             context,
                             MaterialPageRoute(builder: (context) => const MainMenu()),
-                            (route) => false,
+                                (route) => false,
                           );
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
