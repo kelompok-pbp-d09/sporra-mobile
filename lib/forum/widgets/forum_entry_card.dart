@@ -7,7 +7,7 @@ import 'package:sporra_mobile/news/models/news_entry.dart';
 import 'package:sporra_mobile/news/screens/news_detail.dart';
 import 'package:sporra_mobile/forum/screens/forum_form.dart';
 
-
+// Definisi typedef
 typedef ForumRefresh = Future<void> Function();
 
 class ForumEntryCard extends StatefulWidget {
@@ -44,7 +44,6 @@ class ForumEntryCardState extends State<ForumEntryCard> {
 
   final Map<int, GlobalKey> _commentKeys = {};
   final GlobalKey _forumSectionKey = GlobalKey();
-
 
   @override
   void initState() {
@@ -128,13 +127,13 @@ class ForumEntryCardState extends State<ForumEntryCard> {
         widget.onLoaded?.call();
       });
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
-
-
 
   // SORTING
   void _applySorting() {
@@ -169,9 +168,11 @@ class ForumEntryCardState extends State<ForumEntryCard> {
 
     if (response["success"] == true) {
       await fetchForum();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Comment successfully changed")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Comment successfully changed")),
+        );
+      }
     }
   }
 
@@ -185,9 +186,11 @@ class ForumEntryCardState extends State<ForumEntryCard> {
 
     if (response["success"] == true) {
       await fetchForum();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Comment successfully deleted")),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Comment successfully deleted")),
+        );
+      }
     }
   }
 
@@ -222,9 +225,11 @@ class ForumEntryCardState extends State<ForumEntryCard> {
 
     if (res.containsKey("score")) {
       setState(() {
-        comments[idx]["score"] = res["score"];
-        comments[idx]["user_vote"] = res["user_vote"];
-        _applySorting();
+        if (idx != -1) {
+          comments[idx]["score"] = res["score"];
+          comments[idx]["user_vote"] = res["user_vote"];
+          _applySorting();
+        }
       });
     }
   }
@@ -294,7 +299,6 @@ class ForumEntryCardState extends State<ForumEntryCard> {
       _highlightCommentId = commentId;
     });
 
-    // tunggu 2 frame biar layout bener-bener siap
     WidgetsBinding.instance.addPostFrameCallback((_) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final ctx = _commentKeys[commentId]?.currentContext;
@@ -314,8 +318,6 @@ class ForumEntryCardState extends State<ForumEntryCard> {
       }
     });
   }
-
-
 
   // HEADER
   Widget _buildHeader() {
@@ -363,88 +365,81 @@ class ForumEntryCardState extends State<ForumEntryCard> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: refresh,
-      color: widget.accentBlue,
-      backgroundColor: widget.cardBg,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 10),
+    // 🔥 FIX: Hapus RefreshIndicator dan SingleChildScrollView
+    // Gunakan Container/Column agar menyatu dengan scroll parent (NewsDetailPage)
+    return Container(
+      color: Colors.transparent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildHeader(),
+          const SizedBox(height: 10),
 
-            if (comments.isEmpty)
-              _buildEmptyState(),
+          if (comments.isEmpty)
+            _buildEmptyState(),
 
-            if (comments.isNotEmpty)
-              AnimatedContainer(
-                key: _forumSectionKey,
-                duration: const Duration(milliseconds: 600),
-                margin: const EdgeInsets.symmetric(horizontal: 12),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: _highlightForum
-                      ? widget.accentBlue.withOpacity(0.08)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
-                  border: _highlightForum
-                      ? Border.all(
-                    color: widget.accentBlue.withOpacity(0.5),
-                    width: 1.2,
-                  )
-                      : null,
-                ),
-                child: Column(
-                  children: comments.map((c) => _buildCommentCard(c)).toList(),
-                ),
+          if (comments.isNotEmpty)
+            AnimatedContainer(
+              key: _forumSectionKey,
+              duration: const Duration(milliseconds: 600),
+              margin: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                color: _highlightForum
+                    ? widget.accentBlue.withOpacity(0.08)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                border: _highlightForum
+                    ? Border.all(
+                        color: widget.accentBlue.withOpacity(0.5),
+                        width: 1.2,
+                      )
+                    : null,
               ),
-
-            // FORM TAMBAH KOMENTAR
-            ForumForm(
-              articleId: widget.articleId,
-              onSuccess: () async {
-                await fetchForum();
-                // cari komentar terbaru berdasarkan created_at
-                Map<String, dynamic>? newest;
-
-                for (final c in comments) {
-                  if (newest == null) {
-                    newest = c;
-                  } else {
-                    final da = DateTime.parse(c["created_at"] as String);
-                    final db = DateTime.parse(newest["created_at"] as String);
-                    if (da.isAfter(db)) {
-                      newest = c;
-                    }
-                  }
-                }
-
-                if (newest != null) {
-                  _scrollToComment(newest["id"] as int);
-                }
-
-              },
+              child: Column(
+                children: comments.map((c) => _buildCommentCard(c)).toList(),
+              ),
             ),
 
-            const SizedBox(height: 16),
+          // FORM TAMBAH KOMENTAR
+          ForumForm(
+            articleId: widget.articleId,
+            onSuccess: () async {
+              await fetchForum();
+              // cari komentar terbaru berdasarkan created_at
+              Map<String, dynamic>? newest;
 
-            _buildTopForums(),
-            _buildHottestArticles(),
-          ],
-        ),
+              for (final c in comments) {
+                if (newest == null) {
+                  newest = c;
+                } else {
+                  final da = DateTime.parse(c["created_at"] as String);
+                  final db = DateTime.parse(newest["created_at"] as String);
+                  if (da.isAfter(db)) {
+                    newest = c;
+                  }
+                }
+              }
+
+              if (newest != null) {
+                _scrollToComment(newest["id"] as int);
+              }
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          _buildTopForums(),
+          _buildHottestArticles(),
+        ],
       ),
     );
   }
 
-
-    // EMPTY STATE
+  // EMPTY STATE
   Widget _buildEmptyState() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal:
-
-      20, vertical: 30),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(30),
@@ -462,7 +457,7 @@ class ForumEntryCardState extends State<ForumEntryCard> {
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               "Be the first to start this interesting discussion!",
               style: TextStyle(color: Colors.grey),
               textAlign: TextAlign.center,
@@ -654,7 +649,6 @@ class ForumEntryCardState extends State<ForumEntryCard> {
     );
   }
 
-
   Widget _buildTopForums() {
     if (topForums.isEmpty) return const SizedBox();
 
@@ -682,7 +676,6 @@ class ForumEntryCardState extends State<ForumEntryCard> {
             }
 
             final news = NewsEntry.fromJson(articleJson);
-
 
             return InkWell(
               onTap: () {
