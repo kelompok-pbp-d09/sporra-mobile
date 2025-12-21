@@ -187,7 +187,7 @@ class _EditNewsPageState extends State<EditNewsPage> {
                       );
 
                       if (context.mounted) {
-                        if (response['status'] == 'success') {
+                        if (response['status'] == true) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text("News successfully updated!"),
