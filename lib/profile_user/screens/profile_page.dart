@@ -2,19 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/profile_user/model/usermodel.dart';
-import 'package:sporra_mobile/Ticketing/Screens/myBookings.dart'; 
-
-// Model sederhana untuk Status (karena tidak ada di file usermodel.dart yang kamu upload)
-class UserStatus {
-  final int id;
-  String content;
-  final String createdAt;
-  UserStatus({
-    required this.id,
-    required this.content,
-    required this.createdAt,
-  });
-}
+import 'package:sporra_mobile/Ticketing/Screens/myBookings.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool isOwnProfile;
