@@ -182,3 +182,8 @@ Proses integrasi ini membuat alur aplikasi menjadi **mulus, real-time, dan aman*
 * **Link APK:** *(menyusul)*
 * **Link Figma:** *https://www.figma.com/design/kZpLlZVnWPINsl4yttEgwk/SPORRA?node-id=0-1&t=rX4dCHUFBjM6lUuC-1*
 
+---
+
+# 📰 **Blog**
+
+Dylan: https://medium.com/@dylanpirade5/more-than-just-an-assignment-creating-sports-oriented-app-as-a-beginner-bc5210681646
