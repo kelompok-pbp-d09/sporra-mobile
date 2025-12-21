@@ -134,33 +134,54 @@ class _NewsEntryListPageState extends State<NewsEntryListPage> {
                   }
 
                   if (filteredNews.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        setState(
+                          () {},
+                        ); // Memicu rebuild -> fetchNews dipanggil ulang
+                      },
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        // Gunakan ListView agar bisa di-scroll/pull
                         children: [
-                          Icon(
-                            Icons.article_outlined,
-                            size: 60,
-                            color: Colors.grey[700],
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height / 3,
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No news in this category.',
-                            style: TextStyle(color: Colors.grey[500]),
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.article_outlined,
+                                  size: 60,
+                                  color: Colors.grey[700],
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No news in this category.',
+                                  style: TextStyle(color: Colors.grey[500]),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     );
                   }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 80),
-                    itemCount: filteredNews.length,
-                    itemBuilder: (_, index) => NewsEntryCard(
-                      news: filteredNews[index],
-                      onRefresh: () {
-                        setState(() {});
-                      },
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      setState(() {});
+                    },
+                    child: ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 80),
+                      itemCount: filteredNews.length,
+                      itemBuilder: (_, index) => NewsEntryCard(
+                        news: filteredNews[index],
+                        onRefresh: () {
+                          setState(() {});
+                        },
+                      ),
                     ),
                   );
                 }
