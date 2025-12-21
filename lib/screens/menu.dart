@@ -7,7 +7,7 @@ import 'package:sporra_mobile/widgets/left_drawer.dart';
 import 'package:sporra_mobile/widgets/profile_avatar.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import 'package:sporra_mobile/Ticketing/Screens/tickets.dart';
+import 'package:sporra_mobile/Ticketing/Screens/Tickets.dart';
 import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart'; 
 
 class MainMenu extends StatefulWidget {
