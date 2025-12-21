@@ -187,4 +187,5 @@ Proses integrasi ini membuat alur aplikasi menjadi **mulus, real-time, dan aman*
 
 # 📰 **Blog**
 
-Dylan: https://medium.com/@dylanpirade5/more-than-just-an-assignment-creating-sports-oriented-app-as-a-beginner-bc5210681646
+* Dylan: https://medium.com/@dylanpirade5/more-than-just-an-assignment-creating-sports-oriented-app-as-a-beginner-bc5210681646
+* Andi: https://medium.com/@hakimandi976/spaghetti-to-serenity-how-i-cleaned-up-our-flutter-app-made-it-pop-a2e57d76af73
