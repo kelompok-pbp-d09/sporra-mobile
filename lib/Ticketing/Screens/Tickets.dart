@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/widgets/left_drawer.dart';
-import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart';
+import 'package:sporra_mobile/Ticketing/Screens/myBookings.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 
 // Imports Model & Widgets
