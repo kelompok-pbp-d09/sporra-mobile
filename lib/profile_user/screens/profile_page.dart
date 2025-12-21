@@ -2,19 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/profile_user/model/usermodel.dart';
-import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart'; 
-
-// Model sederhana untuk Status (karena tidak ada di file usermodel.dart yang kamu upload)
-class UserStatus {
-  final int id;
-  String content;
-  final String createdAt;
-  UserStatus({
-    required this.id,
-    required this.content,
-    required this.createdAt,
-  });
-}
+import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool isOwnProfile;
@@ -26,22 +14,33 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  // Warna custom
   final Color _bgGray900 = const Color(0xFF111827);
   final Color _bgGray800 = const Color(0xFF1F2937);
   final Color _bgGray700 = const Color(0xFF374151);
   final Color _textGray400 = const Color(0xFF9CA3AF);
 
-  List<UserStatus> statuses = [];
+  late Future<UserProfile> _profileFuture;
 
-  // --- FUNGSI FETCH DATA (Mirip punya temanmu) ---
+  @override
+  void initState() {
+    super.initState();
+    final request = context.read<CookieRequest>();
+    _profileFuture = fetchUserProfile(request);
+  }
+
+  void refreshProfile() {
+    final request = context.read<CookieRequest>();
+    setState(() {
+      _profileFuture = fetchUserProfile(request);
+    });
+  }
+
   Future<UserProfile> fetchUserProfile(CookieRequest request) async {
-    // Ganti URL sesuai environment (10.0.2.2 untuk Emulator Android)
+    // Sesuaikan URL ini
     final response = await request.get(
       'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/json/',
     );
 
-    // Cek apakah response valid dan status True
     if (response['status'] == true) {
       return UserProfile.fromJson(response);
     } else {
@@ -49,9 +48,147 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // --- LOGIC SECTION (ADD, EDIT, DELETE) ---
+  // --- LOGIC EDIT PROFILE (BARU) ---
+  void _showEditProfileDialog(CookieRequest request, UserProfile profile) {
+    // Controller diisi dengan data saat ini
+    final TextEditingController _nameController = TextEditingController(
+      text: profile.fullName,
+    );
+    final TextEditingController _bioController = TextEditingController(
+      text: profile.bio,
+    );
+    final TextEditingController _phoneController = TextEditingController(
+      text: profile.phone,
+    );
+    final TextEditingController _pfpController = TextEditingController(
+      text: profile.profilePicture,
+    );
 
-  void _showStatusDialog({UserStatus? existingStatus}) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: _bgGray800,
+          title: const Text(
+            'Edit Profile',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildTextField("Full Name", _nameController),
+                const SizedBox(height: 12),
+                _buildTextField("Bio", _bioController, maxLines: 3),
+                const SizedBox(height: 12),
+                _buildTextField(
+                  "Phone Number",
+                  _phoneController,
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 12),
+                _buildTextField("Profile Picture URL", _pfpController),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+              ),
+              onPressed: () async {
+                // Validasi sederhana
+                if (_nameController.text.isEmpty) return;
+
+                Navigator.pop(context); // Tutup dialog
+
+                try {
+                  // Kirim ke Django (Endpoint BARU yang kita buat di views.py)
+                  final response = await request.post(
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/edit-profile-flutter/',
+                    {
+                      'full_name': _nameController.text,
+                      'bio': _bioController.text,
+                      'phone': _phoneController.text,
+                      'profile_picture': _pfpController.text,
+                    },
+                  );
+
+                  if (response['status'] == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Profile berhasil diperbarui!"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    refreshProfile(); // Refresh UI
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Gagal: ${response['message']}"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  print("Error updating profile: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("Terjadi kesalahan: $e"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              child: const Text(
+                'Simpan',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Helper untuk membuat TextField input
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: TextStyle(color: _textGray400, fontSize: 12)),
+        const SizedBox(height: 4),
+        TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          maxLines: maxLines,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            isDense: true,
+            filled: true,
+            fillColor: _bgGray700,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- LOGIC TAMBAH & EDIT STATUS (UPDATED) ---
+  void _showStatusDialog(CookieRequest request, {UserStatus? existingStatus}) {
     final TextEditingController _controller = TextEditingController(
       text: existingStatus != null ? existingStatus.content : '',
     );
@@ -88,47 +225,71 @@ class _ProfilePageState extends State<ProfilePage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue[600],
               ),
-              onPressed: () {
-                if (_controller.text.trim().isEmpty) {
+              onPressed: () async {
+                if (_controller.text.trim().isEmpty) return;
+
+                Navigator.pop(context); // Tutup dialog
+
+                try {
+                  // Cek apakah ini EDIT atau TAMBAH BARU
+                  if (existingStatus != null) {
+                    // --- LOGIKA EDIT (POST ke endpoint edit_status) ---
+                    final response = await request.post(
+                      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/edit_status/${existingStatus.id}/',
+                      {'content': _controller.text},
+                    );
+
+                    if (response['success'] == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Status berhasil diperbarui!"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      refreshProfile(); // Refresh UI
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Gagal edit status: ${response['error'] ?? 'Unknown error'}",
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  } else {
+                    // --- LOGIKA TAMBAH BARU (POST ke endpoint add_status) ---
+                    final response = await request.post(
+                      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/add_status/',
+                      {'content': _controller.text},
+                    );
+
+                    if (response['id'] != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Status berhasil ditambahkan!"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      refreshProfile(); // Refresh UI
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Gagal menambah status"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  print("Error status action: $e");
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text("Status tidak boleh kosong"),
+                      content: Text("Terjadi kesalahan koneksi"),
                       backgroundColor: Colors.red,
                     ),
                   );
-                  return;
                 }
-
-                setState(() {
-                  if (existingStatus != null) {
-                    // Edit Logic
-                    existingStatus.content = _controller.text;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Status berhasil diperbarui!"),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  } else {
-                    // Add Logic
-                    statuses.insert(
-                      0,
-                      UserStatus(
-                        id: DateTime.now().millisecondsSinceEpoch,
-                        content: _controller.text,
-                        createdAt:
-                            "Just Now", // Di real app, gunakan DateFormat
-                      ),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Status berhasil ditambahkan!"),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                });
-                Navigator.pop(context);
               },
               child: const Text(
                 'Simpan',
@@ -141,21 +302,20 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showDeleteConfirmDialog(int id) {
+  // --- LOGIC HAPUS STATUS (LAMA) ---
+  void _showDeleteConfirmDialog(CookieRequest request, int id) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: _bgGray800,
-          title: const Center(
-            child: Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.red,
-              size: 48,
-            ),
+          title: const Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.red,
+            size: 48,
           ),
           content: const Text(
-            "Apakah Anda yakin ingin menghapus status ini? Tindakan ini tidak dapat dibatalkan.",
+            "Hapus status ini?",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70),
           ),
@@ -166,30 +326,40 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red[600]),
-              onPressed: () {
-                setState(() {
-                  statuses.removeWhere((element) => element.id == id);
-                });
+              onPressed: () async {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Status berhasil dihapus!"),
-                    backgroundColor: Colors.green,
-                  ),
-                );
+                try {
+                  final response = await request.post(
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/delete_status/$id/',
+                    {},
+                  );
+                  if (response['success'] == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Status dihapus!"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                    refreshProfile();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Gagal menghapus status."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  print("Error deleting: $e");
+                }
               },
-              child: const Text(
-                'Ya, Hapus',
-                style: TextStyle(color: Colors.white),
-              ),
+              child: const Text('Hapus', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
       },
     );
   }
-
-  // --- WIDGET BUILDER ---
 
   @override
   Widget build(BuildContext context) {
@@ -203,9 +373,8 @@ class _ProfilePageState extends State<ProfilePage> {
         foregroundColor: Colors.white,
         elevation: 0,
       ),
-      // MENGGUNAKAN FUTURE BUILDER (Seperti teman Anda)
       body: FutureBuilder<UserProfile>(
-        future: fetchUserProfile(request),
+        future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -219,13 +388,12 @@ class _ProfilePageState extends State<ProfilePage> {
           } else if (!snapshot.hasData) {
             return const Center(
               child: Text(
-                "Tidak ada data profil",
+                "Tidak ada data",
                 style: TextStyle(color: Colors.white),
               ),
             );
           }
 
-          // Data berhasil diambil
           final userProfile = snapshot.data!;
 
           return SingleChildScrollView(
@@ -233,13 +401,16 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildProfileHeader(userProfile),
+                _buildProfileHeader(
+                  userProfile,
+                  request,
+                ), // Pass Request disini
                 const SizedBox(height: 24),
                 if (userProfile.isAdmin) _buildAdminSection(),
                 if (userProfile.isAdmin) const SizedBox(height: 24),
                 _buildStatistics(userProfile),
                 const SizedBox(height: 24),
-                _buildStatusSection(),
+                _buildStatusSection(userProfile, request),
                 const SizedBox(height: 24),
                 _buildEventSection(),
               ],
@@ -250,9 +421,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // --- WIDGET BUILDER (Disesuaikan menerima parameter userProfile) ---
-
-  Widget _buildProfileHeader(UserProfile profile) {
+  // --- UPDATED PROFILE HEADER (Dengan Tombol Edit) ---
+  Widget _buildProfileHeader(UserProfile profile, CookieRequest request) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -267,9 +437,9 @@ class _ProfilePageState extends State<ProfilePage> {
               CircleAvatar(
                 radius: 40,
                 backgroundImage: NetworkImage(
-                  (profile.profilePicture != null &&
-                          profile.profilePicture!.isNotEmpty)
-                      ? profile.profilePicture!
+                  (profile.profilePicture != "" &&
+                          profile.profilePicture.startsWith("http"))
+                      ? profile.profilePicture
                       : 'https://cdn-icons-png.flaticon.com/128/1077/1077063.png',
                 ),
                 backgroundColor: _bgGray700,
@@ -279,13 +449,55 @@ class _ProfilePageState extends State<ProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      profile.fullName,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            profile.fullName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        // TOMBOL EDIT (Hanya jika profil milik sendiri)
+                        if (widget.isOwnProfile)
+                          InkWell(
+                            onTap: () =>
+                                _showEditProfileDialog(request, profile),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue[600],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    "Edit",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                     Text(
                       "@${profile.username}",
@@ -293,12 +505,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      profile.bio,
+                      profile.bio.isNotEmpty ? profile.bio : "-",
                       style: TextStyle(color: Colors.grey[300]),
-                    ), // bio sudah non-nullable di model baru
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      "📱 ${profile.phone}",
+                      "📱 ${profile.phone.isNotEmpty ? profile.phone : "-"}",
                       style: TextStyle(color: _textGray400, fontSize: 13),
                     ),
                   ],
@@ -306,30 +518,12 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
             ],
           ),
-          if (widget.isOwnProfile) ...[
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[600],
-                ),
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Navigasi ke Edit Profile")),
-                  );
-                },
-                child: const Text(
-                  "Edit Profile",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
+
+  // ... (Sisa fungsi _buildStatistics, _buildAdminSection, _buildStatusSection, _buildEventSection tetap sama seperti kode Anda sebelumnya) ...
 
   Widget _buildStatistics(UserProfile profile) {
     return Row(
@@ -391,63 +585,24 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildAdminSection() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _bgGray800,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red.withOpacity(0.5)),
+        border: Border.all(color: Colors.red[600]!.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: const Row(
         children: [
-          Row(
-            children: [
-              Icon(Icons.shield, color: Colors.red[500], size: 20),
-              const SizedBox(width: 8),
-              const Text(
-                "Privilege Admin",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "Sebagai Admin, pengguna ini memiliki hak istimewa:",
-            style: TextStyle(color: Colors.grey[300]),
-          ),
-          const SizedBox(height: 8),
-          _buildBulletPoint("Membuat, mengedit, dan menghapus News."),
-          _buildBulletPoint("Membuat, mengedit, dan menghapus Event."),
-          _buildBulletPoint("Membuat, mengedit, dan menghapus Ticket."),
-          _buildBulletPoint("Menghapus Komentar milik pengguna lain."),
+          Icon(Icons.admin_panel_settings, color: Colors.red, size: 20),
+          SizedBox(width: 8),
+          Text("Admin Privilege Active", style: TextStyle(color: Colors.white)),
         ],
       ),
     );
   }
 
-  Widget _buildBulletPoint(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("• ", style: TextStyle(color: Colors.grey)),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: _textGray400, fontSize: 13),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatusSection() {
+  // --- UPDATED STATUS LIST (Dengan Tombol Edit) ---
+  Widget _buildStatusSection(UserProfile profile, CookieRequest request) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -456,7 +611,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Column(
         children: [
-          // Header Status
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -477,7 +631,8 @@ class _ProfilePageState extends State<ProfilePage> {
                       vertical: 8,
                     ),
                   ),
-                  onPressed: () => _showStatusDialog(),
+                  // Panggil dialog TANPA parameter existingStatus untuk menambah baru
+                  onPressed: () => _showStatusDialog(request),
                   child: const Text(
                     "+ Tambah",
                     style: TextStyle(color: Colors.white, fontSize: 12),
@@ -487,14 +642,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           const SizedBox(height: 16),
 
-          // List Status
-          if (statuses.isEmpty)
+          if (profile.statuses.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Text(
-                widget.isOwnProfile
-                    ? "Kamu belum membuat status apapun."
-                    : "Pengguna ini belum membuat status.",
+                "Belum ada status.",
                 style: TextStyle(
                   color: _textGray400,
                   fontStyle: FontStyle.italic,
@@ -504,11 +656,11 @@ class _ProfilePageState extends State<ProfilePage> {
             )
           else
             ListView.builder(
-              shrinkWrap: true, // Penting agar tidak scroll conflict
+              shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: statuses.length,
+              itemCount: profile.statuses.length,
               itemBuilder: (context, index) {
-                final status = statuses[index];
+                final status = profile.statuses[index];
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(12),
@@ -531,24 +683,34 @@ class _ProfilePageState extends State<ProfilePage> {
                             status.createdAt,
                             style: TextStyle(color: _textGray400, fontSize: 12),
                           ),
+
+                          // --- TOMBOL AKSI (EDIT & DELETE) ---
                           if (widget.isOwnProfile)
                             Row(
                               children: [
+                                // Tombol Edit
                                 GestureDetector(
-                                  onTap: () =>
-                                      _showStatusDialog(existingStatus: status),
+                                  // Panggil dialog DENGAN parameter existingStatus
+                                  onTap: () => _showStatusDialog(
+                                    request,
+                                    existingStatus: status,
+                                  ),
                                   child: const Text(
                                     "Edit",
                                     style: TextStyle(
                                       color: Colors.amber,
                                       fontSize: 12,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 12), // Jarak antar tombol
+                                // Tombol Delete
                                 GestureDetector(
-                                  onTap: () =>
-                                      _showDeleteConfirmDialog(status.id),
+                                  onTap: () => _showDeleteConfirmDialog(
+                                    request,
+                                    status.id,
+                                  ),
                                   child: const Text(
                                     "Delete",
                                     style: TextStyle(
@@ -602,11 +764,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     onPressed: () {
                       // Navigate to My Booking
                       Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MyBookingsPage(),
-                      ),
-                    );
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyBookingsPage(),
+                        ),
+                      );
                     },
                     child: const Text(
                       "Lihat Tiketku",
