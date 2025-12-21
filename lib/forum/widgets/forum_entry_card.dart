@@ -6,6 +6,7 @@ import 'package:sporra_mobile/forum/models/forum_entry.dart';
 import 'package:sporra_mobile/news/models/news_entry.dart';
 import 'package:sporra_mobile/news/screens/news_detail.dart';
 import 'package:sporra_mobile/forum/screens/forum_form.dart';
+import 'package:sporra_mobile/profile_user/screens/profile_page.dart';
 
 // Definisi typedef
 typedef ForumRefresh = Future<void> Function();

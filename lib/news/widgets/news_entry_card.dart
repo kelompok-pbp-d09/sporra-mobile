@@ -8,6 +8,7 @@ import 'package:sporra_mobile/news/models/news_entry.dart';
 import 'package:sporra_mobile/news/screens/news_detail.dart';
 import 'package:sporra_mobile/news/screens/edit_news_form.dart';
 import 'package:sporra_mobile/authentication/user_provider.dart';
+import 'package:sporra_mobile/profile_user/screens/profile_page.dart';
 
 class NewsEntryCard extends StatelessWidget {
   final NewsEntry news;
@@ -54,39 +55,27 @@ class NewsEntryCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 4, 8),
                 child: Row(
                   children: [
-                    GestureDetector(
+                    Icon(Icons.person, size: 16, color: Colors.grey),
+                    SizedBox(width: 4),
+                    
+                    // Bungkus Text Author dengan InkWell/GestureDetector
+                    InkWell(
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("Membuka profil: ${news.fields.author}")),
-                        );
-                      },
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: Colors.blue[700],
-                            backgroundImage: news.fields.authorPfp.isNotEmpty
-                                ? NetworkImage(news.fields.authorPfp)
-                                : null,
-                            child: news.fields.authorPfp.isEmpty
-                                ? Text(
-                              news.fields.author.isNotEmpty
-                                  ? news.fields.author[0].toUpperCase()
-                                  : "A",
-                              style: const TextStyle(fontSize: 12, color: Colors.white),
-                            )
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            news.fields.author,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ProfilePage(
+                              username: news.fields.author, // Pastikan model news punya field author/username
                             ),
                           ),
-                        ],
+                        );
+                      },
+                      child: Text(
+                        news.fields.author,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue, // Ubah warna agar terlihat bisa diklik
+                        ),
                       ),
                     ),
 
