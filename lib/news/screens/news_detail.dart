@@ -8,18 +8,21 @@ import 'package:sporra_mobile/forum/widgets/forum_entry_card.dart';
 
 class NewsDetailPage extends StatefulWidget {
   final NewsEntry news;
-  final bool scrollToForum;
+  final bool scrollToForum; // Fitur ini tetap kita simpan
 
-  const NewsDetailPage(
-      {super.key, required this.news, this.scrollToForum = false,});
+  const NewsDetailPage({
+    super.key, 
+    required this.news, 
+    this.scrollToForum = false,
+  });
 
   @override
   State<NewsDetailPage> createState() => _NewsDetailPageState();
 }
 
 class _NewsDetailPageState extends State<NewsDetailPage> {
-  final GlobalKey<ForumEntryCardState> forumKey =
-  GlobalKey<ForumEntryCardState>();
+  // ✅ GlobalKey disimpan di State agar tidak berubah-ubah saat rebuild
+  final GlobalKey<ForumEntryCardState> forumKey = GlobalKey<ForumEntryCardState>();
 
   // --- PALET WARNA ---
   final Color _bgPrimary = const Color(0xFF111827);
@@ -32,7 +35,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
   void initState() {
     super.initState();
 
-    // 🔥 AUTO SCROLL KE FORUM SETELAH PAGE SIAP
+    // ✅ Fitur Auto Scroll dikembalikan
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.scrollToForum) {
         forumKey.currentState?.scrollToForum();
@@ -48,70 +51,75 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
 
     return Scaffold(
       backgroundColor: _bgPrimary,
-      body: CustomScrollView(
-        slivers: [
-          // 1. HEADER GAMBAR (SliverAppBar)
-          _buildSliverAppBar(context),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // Trigger refresh di child widget (ForumEntryCard)
+          await forumKey.currentState?.refresh();
+        },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            _buildSliverAppBar(context),
 
-          // 2. KONTEN BERITA (SliverToBoxAdapter)
-          // Kita pisah ini agar tidak dirender ulang saat list komentar di-scroll/update
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildCategoryPill(),
-                  const SizedBox(height: 16),
-                  Text(
-                    widget.news.fields.title,
-                    style: TextStyle(
-                      color: _textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      height: 1.2,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildCategoryPill(),
+                    const SizedBox(height: 16),
+                    Text(
+                      widget.news.fields.title,
+                      style: TextStyle(
+                        color: _textPrimary,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildAuthorInfo(formattedDate),
-                  const SizedBox(height: 24),
-                  Divider(color: Colors.grey[800]),
-                  const SizedBox(height: 24),
-                  Text(
-                    widget.news.fields.content,
-                    style: TextStyle(
-                      color: Colors.grey[300],
-                      fontSize: 16,
-                      height: 1.8,
+                    const SizedBox(height: 20),
+                    _buildAuthorInfo(formattedDate),
+                    const SizedBox(height: 24),
+                    Divider(color: Colors.grey[800]),
+                    const SizedBox(height: 24),
+                    Text(
+                      widget.news.fields.content,
+                      style: TextStyle(
+                        color: Colors.grey[300],
+                        fontSize: 16,
+                        height: 1.8,
+                      ),
+                      textAlign: TextAlign.justify,
                     ),
-                    textAlign: TextAlign.justify,
-                  ),
-                  const SizedBox(height: 40),
-                  Divider(color: Colors.grey[800]),
-                ],
+                    const SizedBox(height: 40),
+                    Divider(color: Colors.grey[800]),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          // 3. FORUM SECTION FULL
-          SliverToBoxAdapter(
-            child: ForumEntryCard(
-              key: forumKey,
-              articleId: widget.news.pk,
-              cardBg: _cardBg,
-              accentBlue: _accentBlue,
-              textPrimary: _textPrimary,
-
-              onLoaded: () {
-                if (widget.scrollToForum) {
-                  forumKey.currentState?.scrollToForum();
-                }
-              },
+            // FORUM SECTION
+            SliverToBoxAdapter(
+              child: ForumEntryCard(
+                key: forumKey, // Key disambungkan ke sini
+                articleId: widget.news.pk, // Perhatikan akses widget.news.pk
+                cardBg: _cardBg,
+                accentBlue: _accentBlue,
+                textPrimary: _textPrimary,
+                
+                // Opsional: Jika ingin scroll terjadi setelah data forum selesai loading
+                onLoaded: () {
+                   if (widget.scrollToForum) {
+                     forumKey.currentState?.scrollToForum();
+                   }
+                },
+              ),
             ),
-          ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
-        ],
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        ),
       ),
 
       floatingActionButton: FloatingActionButton(
@@ -158,7 +166,7 @@ class _NewsDetailPageState extends State<NewsDetailPage> {
               : null,
           child: (widget.news.fields.authorPfp.isEmpty)
               ? Text(
-                widget.news.fields.author.isNotEmpty
+                  widget.news.fields.author.isNotEmpty
                       ? widget.news.fields.author[0].toUpperCase()
                       : "A",
                   style: const TextStyle(

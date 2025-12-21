@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/profile_user/model/usermodel.dart';
-import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart';
+import 'package:sporra_mobile/Ticketing/Screens/myBookings.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool isOwnProfile;

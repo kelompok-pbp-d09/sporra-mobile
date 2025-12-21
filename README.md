@@ -179,7 +179,7 @@ Proses integrasi ini membuat alur aplikasi menjadi **mulus, real-time, dan aman*
 
 # 🔗 **Link APK, desain, dan promosi**
 
-* **Link APK:** *(menyusul)*
+* **Link APK:** *https://app.bitrise.io/app/2a1427f7-a95a-4f9b-810e-e1d62e53c20e/installable-artifacts/79b52e74b1252cc0/public-install-page/9daa98cb7ed3100793b50dd5dd21a507*
 * **Link Figma:** *https://www.figma.com/design/kZpLlZVnWPINsl4yttEgwk/SPORRA?node-id=0-1&t=rX4dCHUFBjM6lUuC-1*
 * **Link Promosi:** *https://drive.google.com/drive/folders/1Sgw6C0NB88xDuvwF6QT8Ox-a4TreOZaM*
   
@@ -187,4 +187,6 @@ Proses integrasi ini membuat alur aplikasi menjadi **mulus, real-time, dan aman*
 
 # 📰 **Blog**
 
-Dylan: https://medium.com/@dylanpirade5/more-than-just-an-assignment-creating-sports-oriented-app-as-a-beginner-bc5210681646
+* Dylan: https://medium.com/@dylanpirade5/more-than-just-an-assignment-creating-sports-oriented-app-as-a-beginner-bc5210681646
+* Andi: https://medium.com/@hakimandi976/spaghetti-to-serenity-how-i-cleaned-up-our-flutter-app-made-it-pop-a2e57d76af73
+* Naila: https://medium.com/@nailasazizah/navigasi-forum-dengan-auto-scroll-highlight-di-flutter-be5ceabccdba
