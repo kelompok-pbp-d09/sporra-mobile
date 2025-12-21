@@ -100,7 +100,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
 
           const Divider(color: Colors.grey),
 
-          // 5. LOGIKA LOGIN / LOGOUT
+          // 5. LOGIKA LOGIN / LOGOUT test
           if (request.loggedIn)
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),

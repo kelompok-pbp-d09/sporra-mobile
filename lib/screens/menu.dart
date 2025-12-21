@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sporra_mobile/Ticketing/Screens/Tickets.dart';
 import 'package:sporra_mobile/news/screens/news_entry_list.dart';
 import 'package:sporra_mobile/news/screens/news_form.dart';
 import 'package:sporra_mobile/event/screens/event_home.dart';
@@ -65,18 +66,17 @@ class _MainMenuState extends State<MainMenu> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-            IconButton(
-              icon: const Icon(Icons.receipt_long),
-              tooltip: "My Bookings",
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MyBookingsPage()),
-                );
-              },
-            ),
-          
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            tooltip: "My Bookings",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyBookingsPage()),
+              );
+            },
+          ),
+
           const ProfileAvatarButton(),
         ],
       ),
@@ -85,8 +85,11 @@ class _MainMenuState extends State<MainMenu> {
 
       body: IndexedStack(index: _selectedIndex, children: _pages),
 
-      floatingActionButton: (request.loggedIn &&
-              (_selectedIndex == 0 || _selectedIndex == 1 || _selectedIndex == 2))
+      floatingActionButton:
+          (request.loggedIn &&
+              (_selectedIndex == 0 ||
+                  _selectedIndex == 1 ||
+                  _selectedIndex == 2))
           ? FloatingActionButton(
               onPressed: () async {
                 if (_selectedIndex == 0) {
