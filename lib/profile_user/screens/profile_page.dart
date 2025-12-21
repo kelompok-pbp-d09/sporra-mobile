@@ -6,8 +6,9 @@ import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool isOwnProfile;
+  final String? username;
 
-  const ProfilePage({Key? key, this.isOwnProfile = true}) : super(key: key);
+  const ProfilePage({Key? key, this.isOwnProfile = true, this.username}) : super(key: key);
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -20,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final Color _textGray400 = const Color(0xFF9CA3AF);
 
   late Future<UserProfile> _profileFuture;
-
+  bool isOwnProfile = false;
   @override
   void initState() {
     super.initState();
@@ -36,12 +37,34 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Future<UserProfile> fetchUserProfile(CookieRequest request) async {
-    // Sesuaikan URL ini
-    final response = await request.get(
-      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/json/',
-    );
+    String url = 'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/json/';
+    if (widget.username != null) {
+      url = 'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/json/${widget.username}/';
+    }
 
-    if (response['status'] == true) {
+    final response = await request.get(url);
+
+   if (response['status'] == true) {
+      // Set status isOwnProfile berdasarkan respons dari Django (jika ditambahkan) 
+      // atau logika sederhana: jika widget.username == null, maka profil sendiri.
+      // Namun, amannya kita cek username dari response vs logged in user jika ada, 
+      // tapi untuk simplifikasi:
+      
+      setState(() {
+         // Jika widget.username kosong, berarti buka profil sendiri via navbar
+         // Jika widget.username ada, cek logic lain atau anggap sementara false (viewer mode)
+         // (Idealnya backend mengirim flag 'is_own_profile')
+         if (widget.username == null) {
+            isOwnProfile = true;
+         } else {
+            // Cek field dari JSON backend jika Anda menambahkannya di langkah 1
+            // isOwnProfile = response['is_own_profile'] ?? false;
+            
+            // Atau default ke false jika melihat profil orang lain
+            isOwnProfile = false; 
+         }
+      });
+
       return UserProfile.fromJson(response);
     } else {
       throw Exception('Gagal memuat profil: ${response['message']}');
@@ -464,7 +487,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                         ),
                         // TOMBOL EDIT (Hanya jika profil milik sendiri)
-                        if (widget.isOwnProfile)
+                        if (isOwnProfile)
                           InkWell(
                             onTap: () =>
                                 _showEditProfileDialog(request, profile),
@@ -615,14 +638,14 @@ class _ProfilePageState extends State<ProfilePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                widget.isOwnProfile ? "Status Saya" : "Status Pengguna Ini",
+                isOwnProfile ? "Status Saya" : "Status Pengguna Ini",
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              if (widget.isOwnProfile)
+              if (isOwnProfile)
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[600],
@@ -685,7 +708,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
 
                           // --- TOMBOL AKSI (EDIT & DELETE) ---
-                          if (widget.isOwnProfile)
+                          if (isOwnProfile)
                             Row(
                               children: [
                                 // Tombol Edit
@@ -740,7 +763,7 @@ class _ProfilePageState extends State<ProfilePage> {
         color: _bgGray800,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: widget.isOwnProfile
+      child: isOwnProfile
           ? Column(
               children: [
                 const Align(
