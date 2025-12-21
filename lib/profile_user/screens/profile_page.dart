@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/profile_user/model/usermodel.dart';
+import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart'; 
 
 // Model sederhana untuk Status (karena tidak ada di file usermodel.dart yang kamu upload)
 class UserStatus {
@@ -600,6 +601,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     onPressed: () {
                       // Navigate to My Booking
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const MyBookingsPage(),
+                      ),
+                    );
                     },
                     child: const Text(
                       "Lihat Tiketku",
