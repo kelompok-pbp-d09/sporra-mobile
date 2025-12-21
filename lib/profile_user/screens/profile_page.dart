@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:sporra_mobile/profile_user/model/usermodel.dart';
-import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart'; 
+import 'package:sporra_mobile/Ticketing/Screens/MyBookings.dart';
 
 class ProfilePage extends StatefulWidget {
   final bool isOwnProfile;
@@ -37,8 +37,10 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<UserProfile> fetchUserProfile(CookieRequest request) async {
     // Sesuaikan URL ini
-    final response = await request.get('https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/json/');
-    
+    final response = await request.get(
+      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/json/',
+    );
+
     if (response['status'] == true) {
       return UserProfile.fromJson(response);
     } else {
@@ -49,17 +51,28 @@ class _ProfilePageState extends State<ProfilePage> {
   // --- LOGIC EDIT PROFILE (BARU) ---
   void _showEditProfileDialog(CookieRequest request, UserProfile profile) {
     // Controller diisi dengan data saat ini
-    final TextEditingController _nameController = TextEditingController(text: profile.fullName);
-    final TextEditingController _bioController = TextEditingController(text: profile.bio);
-    final TextEditingController _phoneController = TextEditingController(text: profile.phone);
-    final TextEditingController _pfpController = TextEditingController(text: profile.profilePicture);
+    final TextEditingController _nameController = TextEditingController(
+      text: profile.fullName,
+    );
+    final TextEditingController _bioController = TextEditingController(
+      text: profile.bio,
+    );
+    final TextEditingController _phoneController = TextEditingController(
+      text: profile.phone,
+    );
+    final TextEditingController _pfpController = TextEditingController(
+      text: profile.profilePicture,
+    );
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           backgroundColor: _bgGray800,
-          title: const Text('Edit Profile', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Edit Profile',
+            style: TextStyle(color: Colors.white),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -68,7 +81,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 12),
                 _buildTextField("Bio", _bioController, maxLines: 3),
                 const SizedBox(height: 12),
-                _buildTextField("Phone Number", _phoneController, keyboardType: TextInputType.phone),
+                _buildTextField(
+                  "Phone Number",
+                  _phoneController,
+                  keyboardType: TextInputType.phone,
+                ),
                 const SizedBox(height: 12),
                 _buildTextField("Profile Picture URL", _pfpController),
               ],
@@ -80,46 +97,57 @@ class _ProfilePageState extends State<ProfilePage> {
               child: const Text('Batal', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[600]),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+              ),
               onPressed: () async {
                 // Validasi sederhana
                 if (_nameController.text.isEmpty) return;
-                
+
                 Navigator.pop(context); // Tutup dialog
 
                 try {
                   // Kirim ke Django (Endpoint BARU yang kita buat di views.py)
                   final response = await request.post(
-                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/edit-profile-flutter/', 
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/edit-profile-flutter/',
                     {
                       'full_name': _nameController.text,
                       'bio': _bioController.text,
                       'phone': _phoneController.text,
                       'profile_picture': _pfpController.text,
-                    }
+                    },
                   );
 
                   if (response['status'] == true) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Profile berhasil diperbarui!"),
-                      backgroundColor: Colors.green,
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Profile berhasil diperbarui!"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
                     refreshProfile(); // Refresh UI
                   } else {
-                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text("Gagal: ${response['message']}"),
-                      backgroundColor: Colors.red,
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Gagal: ${response['message']}"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
                 } catch (e) {
-                   print("Error updating profile: $e");
-                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  print("Error updating profile: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
                       content: Text("Terjadi kesalahan: $e"),
                       backgroundColor: Colors.red,
-                    ));
+                    ),
+                  );
                 }
               },
-              child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Simpan',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -128,7 +156,12 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   // Helper untuk membuat TextField input
-  Widget _buildTextField(String label, TextEditingController controller, {int maxLines = 1, TextInputType? keyboardType}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    int maxLines = 1,
+    TextInputType? keyboardType,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -144,17 +177,20 @@ class _ProfilePageState extends State<ProfilePage> {
             filled: true,
             fillColor: _bgGray700,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 12,
+            ),
           ),
         ),
       ],
     );
   }
 
-  // --- LOGIC TAMBAH STATUS (LAMA) ---
+  // --- LOGIC TAMBAH & EDIT STATUS (UPDATED) ---
   void _showStatusDialog(CookieRequest request, {UserStatus? existingStatus}) {
     final TextEditingController _controller = TextEditingController(
-      text: existingStatus != null ? existingStatus.content : ''
+      text: existingStatus != null ? existingStatus.content : '',
     );
 
     showDialog(
@@ -175,7 +211,9 @@ class _ProfilePageState extends State<ProfilePage> {
               hintStyle: TextStyle(color: _textGray400),
               filled: true,
               fillColor: _bgGray700,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
           actions: [
@@ -184,30 +222,79 @@ class _ProfilePageState extends State<ProfilePage> {
               child: const Text('Batal', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[600]),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[600],
+              ),
               onPressed: () async {
                 if (_controller.text.trim().isEmpty) return;
-                Navigator.pop(context);
+
+                Navigator.pop(context); // Tutup dialog
+
                 try {
-                  final response = await request.post(
-                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/add_status/', 
-                    {'content': _controller.text}
-                  );
-                  if (response['id'] != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Status berhasil ditambahkan!"),
-                      backgroundColor: Colors.green,
-                    ));
-                    refreshProfile();
+                  // Cek apakah ini EDIT atau TAMBAH BARU
+                  if (existingStatus != null) {
+                    // --- LOGIKA EDIT (POST ke endpoint edit_status) ---
+                    final response = await request.post(
+                      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/edit_status/${existingStatus.id}/',
+                      {'content': _controller.text},
+                    );
+
+                    if (response['success'] == true) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Status berhasil diperbarui!"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      refreshProfile(); // Refresh UI
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            "Gagal edit status: ${response['error'] ?? 'Unknown error'}",
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   } else {
-                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Gagal menambah status"),
-                      backgroundColor: Colors.red,
-                    ));
+                    // --- LOGIKA TAMBAH BARU (POST ke endpoint add_status) ---
+                    final response = await request.post(
+                      'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/add_status/',
+                      {'content': _controller.text},
+                    );
+
+                    if (response['id'] != null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Status berhasil ditambahkan!"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      refreshProfile(); // Refresh UI
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Gagal menambah status"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
                   }
-                } catch (e) { print("Error adding status: $e"); }
+                } catch (e) {
+                  print("Error status action: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Terjadi kesalahan koneksi"),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               },
-              child: const Text('Simpan', style: TextStyle(color: Colors.white)),
+              child: const Text(
+                'Simpan',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         );
@@ -222,7 +309,11 @@ class _ProfilePageState extends State<ProfilePage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: _bgGray800,
-          title: const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 48),
+          title: const Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.red,
+            size: 48,
+          ),
           content: const Text(
             "Hapus status ini?",
             textAlign: TextAlign.center,
@@ -239,22 +330,28 @@ class _ProfilePageState extends State<ProfilePage> {
                 Navigator.pop(context);
                 try {
                   final response = await request.post(
-                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/delete_status/$id/', 
-                    {}
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/profile_user/delete_status/$id/',
+                    {},
                   );
                   if (response['success'] == true) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Status dihapus!"),
-                      backgroundColor: Colors.green,
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Status dihapus!"),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
                     refreshProfile();
                   } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Gagal menghapus status."),
-                      backgroundColor: Colors.red,
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Gagal menghapus status."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                   }
-                } catch (e) { print("Error deleting: $e"); }
+                } catch (e) {
+                  print("Error deleting: $e");
+                }
               },
               child: const Text('Hapus', style: TextStyle(color: Colors.white)),
             ),
@@ -282,9 +379,19 @@ class _ProfilePageState extends State<ProfilePage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}", style: TextStyle(color: _textGray400)));
+            return Center(
+              child: Text(
+                "Error: ${snapshot.error}",
+                style: TextStyle(color: _textGray400),
+              ),
+            );
           } else if (!snapshot.hasData) {
-            return const Center(child: Text("Tidak ada data", style: TextStyle(color: Colors.white)));
+            return const Center(
+              child: Text(
+                "Tidak ada data",
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           }
 
           final userProfile = snapshot.data!;
@@ -294,7 +401,10 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildProfileHeader(userProfile, request), // Pass Request disini
+                _buildProfileHeader(
+                  userProfile,
+                  request,
+                ), // Pass Request disini
                 const SizedBox(height: 24),
                 if (userProfile.isAdmin) _buildAdminSection(),
                 if (userProfile.isAdmin) const SizedBox(height: 24),
@@ -315,110 +425,190 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildProfileHeader(UserProfile profile, CookieRequest request) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _bgGray800, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: _bgGray800,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         children: [
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start, 
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                radius: 40, 
+                radius: 40,
                 backgroundImage: NetworkImage(
-                  (profile.profilePicture != "" && profile.profilePicture.startsWith("http")) 
-                  ? profile.profilePicture 
-                  : 'https://cdn-icons-png.flaticon.com/128/1077/1077063.png'
-                ), 
-                backgroundColor: _bgGray700
+                  (profile.profilePicture != "" &&
+                          profile.profilePicture.startsWith("http"))
+                      ? profile.profilePicture
+                      : 'https://cdn-icons-png.flaticon.com/128/1077/1077063.png',
+                ),
+                backgroundColor: _bgGray700,
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start, 
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Flexible(
                           child: Text(
-                            profile.fullName, 
-                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+                            profile.fullName,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         // TOMBOL EDIT (Hanya jika profil milik sendiri)
                         if (widget.isOwnProfile)
                           InkWell(
-                            onTap: () => _showEditProfileDialog(request, profile),
+                            onTap: () =>
+                                _showEditProfileDialog(request, profile),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.blue[600],
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: const Row(
                                 children: [
-                                  Icon(Icons.edit, size: 14, color: Colors.white),
+                                  Icon(
+                                    Icons.edit,
+                                    size: 14,
+                                    color: Colors.white,
+                                  ),
                                   SizedBox(width: 4),
-                                  Text("Edit", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                  Text(
+                                    "Edit",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                           ),
                       ],
                     ),
-                    Text("@${profile.username}", style: TextStyle(color: _textGray400)),
+                    Text(
+                      "@${profile.username}",
+                      style: TextStyle(color: _textGray400),
+                    ),
                     const SizedBox(height: 8),
-                    Text(profile.bio.isNotEmpty ? profile.bio : "-", style: TextStyle(color: Colors.grey[300])),
+                    Text(
+                      profile.bio.isNotEmpty ? profile.bio : "-",
+                      style: TextStyle(color: Colors.grey[300]),
+                    ),
                     const SizedBox(height: 4),
-                    Text("📱 ${profile.phone.isNotEmpty ? profile.phone : "-"}", style: TextStyle(color: _textGray400, fontSize: 13)),
-                  ]
+                    Text(
+                      "📱 ${profile.phone.isNotEmpty ? profile.phone : "-"}",
+                      style: TextStyle(color: _textGray400, fontSize: 13),
+                    ),
+                  ],
                 ),
               ),
-            ]
+            ],
           ),
         ],
       ),
     );
   }
-  
+
   // ... (Sisa fungsi _buildStatistics, _buildAdminSection, _buildStatusSection, _buildEventSection tetap sama seperti kode Anda sebelumnya) ...
 
   Widget _buildStatistics(UserProfile profile) {
-      return Row(children: [
-          Expanded(child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: _bgGray800, borderRadius: BorderRadius.circular(12)), child: Column(children: [
-              Text("${profile.totalComments}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text("Komentar", style: TextStyle(color: _textGray400, fontSize: 12)),
-          ]))),
-          const SizedBox(width: 16),
-          Expanded(child: Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: _bgGray800, borderRadius: BorderRadius.circular(12)), child: Column(children: [
-              Text("${profile.newsCreated}", style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white)),
-              Text("News", style: TextStyle(color: _textGray400, fontSize: 12)),
-          ]))),
-      ]);
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _bgGray800,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  "${profile.totalComments}",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  "Komentar",
+                  style: TextStyle(color: _textGray400, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _bgGray800,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  "${profile.newsCreated}",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  "News",
+                  style: TextStyle(color: _textGray400, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildAdminSection() {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: _bgGray800, 
-          border: Border.all(color: Colors.red[600]!.withOpacity(0.5)),
-          borderRadius: BorderRadius.circular(8)
-        ),
-        child: const Row(
-          children: [
-            Icon(Icons.admin_panel_settings, color: Colors.red, size: 20),
-            SizedBox(width: 8),
-            Text("Admin Privilege Active", style: TextStyle(color: Colors.white)),
-          ],
-        )
-      );
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _bgGray800,
+        border: Border.all(color: Colors.red[600]!.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: const Row(
+        children: [
+          Icon(Icons.admin_panel_settings, color: Colors.red, size: 20),
+          SizedBox(width: 8),
+          Text("Admin Privilege Active", style: TextStyle(color: Colors.white)),
+        ],
+      ),
+    );
   }
 
+  // --- UPDATED STATUS LIST (Dengan Tombol Edit) ---
   Widget _buildStatusSection(UserProfile profile, CookieRequest request) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: _bgGray800, borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: _bgGray800,
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Column(
         children: [
           Row(
@@ -426,29 +616,44 @@ class _ProfilePageState extends State<ProfilePage> {
             children: [
               Text(
                 widget.isOwnProfile ? "Status Saya" : "Status Pengguna Ini",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
               if (widget.isOwnProfile)
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[600],
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
+                  // Panggil dialog TANPA parameter existingStatus untuk menambah baru
                   onPressed: () => _showStatusDialog(request),
-                  child: const Text("+ Tambah", style: TextStyle(color: Colors.white, fontSize: 12)),
+                  child: const Text(
+                    "+ Tambah",
+                    style: TextStyle(color: Colors.white, fontSize: 12),
+                  ),
                 ),
             ],
           ),
           const SizedBox(height: 16),
+
           if (profile.statuses.isEmpty)
-             Padding(
-               padding: const EdgeInsets.symmetric(vertical: 20),
-               child: Text(
-                 "Belum ada status.",
-                 style: TextStyle(color: _textGray400, fontStyle: FontStyle.italic),
-                 textAlign: TextAlign.center,
-               ),
-             )
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                "Belum ada status.",
+                style: TextStyle(
+                  color: _textGray400,
+                  fontStyle: FontStyle.italic,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            )
           else
             ListView.builder(
               shrinkWrap: true,
@@ -466,19 +671,58 @@ class _ProfilePageState extends State<ProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(status.content, style: const TextStyle(color: Colors.white)),
+                      Text(
+                        status.content,
+                        style: const TextStyle(color: Colors.white),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(status.createdAt, style: TextStyle(color: _textGray400, fontSize: 12)),
+                          Text(
+                            status.createdAt,
+                            style: TextStyle(color: _textGray400, fontSize: 12),
+                          ),
+
+                          // --- TOMBOL AKSI (EDIT & DELETE) ---
                           if (widget.isOwnProfile)
-                            GestureDetector(
-                              onTap: () => _showDeleteConfirmDialog(request, status.id),
-                              child: const Text("Delete", style: TextStyle(color: Colors.redAccent, fontSize: 12)),
-                            )
+                            Row(
+                              children: [
+                                // Tombol Edit
+                                GestureDetector(
+                                  // Panggil dialog DENGAN parameter existingStatus
+                                  onTap: () => _showStatusDialog(
+                                    request,
+                                    existingStatus: status,
+                                  ),
+                                  child: const Text(
+                                    "Edit",
+                                    style: TextStyle(
+                                      color: Colors.amber,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12), // Jarak antar tombol
+                                // Tombol Delete
+                                GestureDetector(
+                                  onTap: () => _showDeleteConfirmDialog(
+                                    request,
+                                    status.id,
+                                  ),
+                                  child: const Text(
+                                    "Delete",
+                                    style: TextStyle(
+                                      color: Colors.redAccent,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                         ],
-                      )
+                      ),
                     ],
                   ),
                 );
@@ -501,15 +745,35 @@ class _ProfilePageState extends State<ProfilePage> {
               children: [
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: Text("Event yang Saya Booking", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                  child: Text(
+                    "Event yang Saya Booking",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[600]),
-                    onPressed: () {},
-                    child: const Text("Lihat Tiketku", style: TextStyle(color: Colors.white)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[600],
+                    ),
+                    onPressed: () {
+                      // Navigate to My Booking
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyBookingsPage(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "Lihat Tiketku",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],
@@ -517,9 +781,23 @@ class _ProfilePageState extends State<ProfilePage> {
           : Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("Event yang Dibooking", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                const Text(
+                  "Event yang Dibooking",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                Text("Informasi event yang dibooking bersifat pribadi.", style: TextStyle(color: _textGray400, fontStyle: FontStyle.italic, fontSize: 13)),
+                Text(
+                  "Informasi event yang dibooking bersifat pribadi.",
+                  style: TextStyle(
+                    color: _textGray400,
+                    fontStyle: FontStyle.italic,
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ),
     );
