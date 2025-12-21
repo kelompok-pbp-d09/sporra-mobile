@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
-import '../models/BookingModel.dart';
+import '../Models/BookingModel.dart';
 import 'package:sporra_mobile/authentication/login.dart';
 
 class MyBookingsPage extends StatefulWidget {
@@ -76,7 +76,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       if (mounted) {
         setState(() {
           _bookings = bookingEntry.bookings;
-          _filteredBookings = bookingEntry.bookings; // Reset filter saat fetch baru
+          _filteredBookings =
+              bookingEntry.bookings; // Reset filter saat fetch baru
           _isLoading = false;
         });
       }
@@ -84,9 +85,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       print("Error fetching bookings: $e");
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to load data: $e")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Failed to load data: $e")));
       }
     }
   }
@@ -102,15 +103,20 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: const Color(0xFF1F2937),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("E-Ticket",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20)),
+              const Text(
+                "E-Ticket",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
               const SizedBox(height: 20),
               // MOCKUP QR CODE
               Container(
@@ -126,37 +132,46 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     children: [
                       Icon(Icons.qr_code_2, size: 120, color: Colors.black),
                       const SizedBox(height: 8),
-                      Text("ID: ${booking.id}",
-                          style: const TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16)),
+                      Text(
+                        "ID: ${booking.id}",
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              Text(booking.eventTitle,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: Colors.blueAccent,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)),
+              Text(
+                booking.eventTitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.blueAccent,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 5),
-              Text("${booking.quantity}x ${booking.ticketType.toUpperCase()} Ticket",
-                  style: const TextStyle(color: Colors.white70)),
+              Text(
+                "${booking.quantity}x ${booking.ticketType.toUpperCase()} Ticket",
+                style: const TextStyle(color: Colors.white70),
+              ),
               const SizedBox(height: 15),
               const Text(
-                  "Show this QR Code at the venue entrance to verify your booking.",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey, fontSize: 12)),
+                "Show this QR Code at the venue entrance to verify your booking.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: const Text("Close", style: TextStyle(color: Colors.white)),
-            )
+            ),
           ],
         );
       },
@@ -188,8 +203,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                 fillColor: const Color(0xFF1F2937),
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: BorderSide.none),
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
               ),
             ),
           ),
@@ -234,9 +250,7 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
         return SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -257,7 +271,8 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                       Navigator.pop(context); // Kembali ke Home/Tickets
                     },
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[800]),
+                      backgroundColor: Colors.blue[800],
+                    ),
                     child: const Text(
                       "Find Tickets",
                       style: TextStyle(color: Colors.white),
@@ -307,8 +322,10 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.blue[900]?.withOpacity(0.5),
                     borderRadius: BorderRadius.circular(8),
@@ -341,7 +358,9 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
                     const SizedBox(height: 4),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: booking.ticketType.toLowerCase() == 'vip'
                             ? Colors.amber[900]
@@ -499,10 +518,7 @@ class _StaggeredItemState extends State<_StaggeredItem>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _animation,
-      child: SlideTransition(
-        position: _slideAnimation,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnimation, child: widget.child),
     );
   }
 }
