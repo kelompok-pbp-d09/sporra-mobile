@@ -93,11 +93,16 @@ class TopForum {
     required this.postCount,
   });
 
-  factory TopForum.fromJson(Map<String, dynamic> json) => TopForum(
-    articleId: json["article_id"],
-    title: json["title"],
-    postCount: json["post_count"],
-  );
+  factory TopForum.fromJson(Map<String, dynamic> json) {
+    final article = json["article"];
+
+    return TopForum(
+      articleId: article["pk"],
+      title: article["fields"]["title"],
+      postCount: json["post_count"],
+    );
+  }
+
 
   Map<String, dynamic> toJson() => {
     "article_id": articleId,

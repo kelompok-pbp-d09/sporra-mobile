@@ -1,8 +1,7 @@
-// lib/forum/forum_form.dart
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:sporra_mobile/authentication/login.dart';
 
 class ForumForm extends StatefulWidget {
   final String articleId; // UUID string dari Article (sama dengan pk di URL)
@@ -25,6 +24,20 @@ class _ForumFormState extends State<ForumForm> {
   Future<void> _submitComment() async {
     final content = _controller.text.trim();
     if (content.isEmpty) return;
+
+    final req = context.read<CookieRequest>();
+
+    if (!req.loggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You must log in to comment.")),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+      return;
+    }
 
     setState(() => _isSending = true);
 
@@ -56,14 +69,14 @@ class _ForumFormState extends State<ForumForm> {
         // fallback
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal menambah komentar.")),
+          const SnackBar(content: Text("Failed to add comment.")),
         );
       }
     } catch (e) {
       // Bisa juga dapat 403 ketika belum login
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Terjadi kesalahan: ${e.toString()}")),
+        SnackBar(content: Text("An error: ${e.toString()}")),
       );
     } finally {
       if (mounted) setState(() => _isSending = false);

@@ -15,8 +15,8 @@ class NewsEntryCard extends StatelessWidget {
   final VoidCallback? onRefresh; // 1. Tambahkan parameter ini
 
   const NewsEntryCard({
-    super.key, 
-    required this.news, 
+    super.key,
+    required this.news,
     this.onTap,
     this.onRefresh, // 2. Masukkan ke constructor
   });
@@ -25,7 +25,7 @@ class NewsEntryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
     final userProvider = context.watch<UserProvider>();
-    
+
     String currentUsername = userProvider.username;
     bool isAdmin = userProvider.isAdmin;
 
@@ -70,11 +70,11 @@ class NewsEntryCard extends StatelessWidget {
                                 : null,
                             child: news.fields.authorPfp.isEmpty
                                 ? Text(
-                                    news.fields.author.isNotEmpty
-                                        ? news.fields.author[0].toUpperCase()
-                                        : "A",
-                                    style: const TextStyle(fontSize: 12, color: Colors.white),
-                                  )
+                              news.fields.author.isNotEmpty
+                                  ? news.fields.author[0].toUpperCase()
+                                  : "A",
+                              style: const TextStyle(fontSize: 12, color: Colors.white),
+                            )
                                 : null,
                           ),
                           const SizedBox(width: 8),
@@ -148,19 +148,19 @@ class NewsEntryCard extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // --- GAMBAR ---
               if (news.fields.thumbnail != null && news.fields.thumbnail.trim().isNotEmpty)
                 Container(
-                   constraints: const BoxConstraints(maxHeight: 500),
-                   width: double.infinity,
-                   child: Image.network(
-                     'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
-                     fit: BoxFit.cover,
-                     errorBuilder: (context, error, stackTrace) => Container(height: 100, color: Colors.grey[800]),
-                   ),
+                  constraints: const BoxConstraints(maxHeight: 500),
+                  width: double.infinity,
+                  child: Image.network(
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(height: 100, color: Colors.grey[800]),
+                  ),
                 ),
 
               // --- FOOTER ---
@@ -174,29 +174,17 @@ class NewsEntryCard extends StatelessWidget {
                         const Icon(Icons.remove_red_eye_sharp, size: 20, color: Colors.grey),
                         const SizedBox(width: 8),
                         Text(
-                          "${news.fields.newsViews}", 
+                          "${news.fields.newsViews}",
                           style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
                     _buildActionPill(
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Fitur Komentar segera hadir!")),
+                        Share.share(
+                          "Read interesting sport news on Sporra!\n\n${news.fields.title}\nOleh: ${news.fields.author}\n\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
+                          subject: news.fields.title,
                         );
-                      },
-                      children: [
-                        const Icon(Icons.mode_comment_outlined, size: 18, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        const Text("Comments", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    _buildActionPill(
-                      onTap: () {
-                          Share.share(
-                           "Read interesting sport news on Sporra!\n\n${news.fields.title}\nOleh: ${news.fields.author}\n\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
-                           subject: news.fields.title,
-                         );
                       },
                       children: [
                         const Icon(Icons.share_outlined, size: 18, color: Colors.grey),
@@ -244,7 +232,7 @@ class NewsEntryCard extends StatelessWidget {
   // --- FUNGSI API DELETE ---
   Future<void> _deleteNews(BuildContext context, CookieRequest request) async {
     final url = 'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/delete-flutter/${news.pk}/';
-    
+
     try {
       final response = await request.post(url, {});
 
@@ -256,10 +244,10 @@ class NewsEntryCard extends StatelessWidget {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // 4. PANGGIL CALLBACK PARENT UNTUK REFRESH
         if (onRefresh != null) {
-          onRefresh!(); 
+          onRefresh!();
         }
 
       } else {

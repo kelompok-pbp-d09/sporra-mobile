@@ -1,18 +1,25 @@
 // ignore_for_file: deprecated_member_use
-// TODO: Connect forum API ke news
 
 import 'package:flutter/material.dart';
 import 'package:sporra_mobile/news/models/news_entry.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sporra_mobile/forum/widgets/forum_entry_card.dart';
-import 'package:sporra_mobile/forum/screens/forum_form.dart';
 
-class NewsDetailPage extends StatelessWidget {
+class NewsDetailPage extends StatefulWidget {
   final NewsEntry news;
+  final bool scrollToForum;
 
-  NewsDetailPage({super.key, required this.news});
-  final forumKey = GlobalKey<ForumEntryCardState>();
+  const NewsDetailPage(
+      {super.key, required this.news, this.scrollToForum = false,});
+
+  @override
+  State<NewsDetailPage> createState() => _NewsDetailPageState();
+}
+
+class _NewsDetailPageState extends State<NewsDetailPage> {
+  final GlobalKey<ForumEntryCardState> forumKey =
+  GlobalKey<ForumEntryCardState>();
 
   // --- PALET WARNA ---
   final Color _bgPrimary = const Color(0xFF111827);
@@ -22,10 +29,22 @@ class NewsDetailPage extends StatelessWidget {
   final Color _cardBg = const Color(0xFF1F2937);
 
   @override
+  void initState() {
+    super.initState();
+
+    // 🔥 AUTO SCROLL KE FORUM SETELAH PAGE SIAP
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.scrollToForum) {
+        forumKey.currentState?.scrollToForum();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final String formattedDate = DateFormat(
       'dd MMM yyyy, HH:mm',
-    ).format(news.fields.createdAt);
+    ).format(widget.news.fields.createdAt);
 
     return Scaffold(
       backgroundColor: _bgPrimary,
@@ -45,7 +64,7 @@ class NewsDetailPage extends StatelessWidget {
                   _buildCategoryPill(),
                   const SizedBox(height: 16),
                   Text(
-                    news.fields.title,
+                    widget.news.fields.title,
                     style: TextStyle(
                       color: _textPrimary,
                       fontSize: 28,
@@ -59,7 +78,7 @@ class NewsDetailPage extends StatelessWidget {
                   Divider(color: Colors.grey[800]),
                   const SizedBox(height: 24),
                   Text(
-                    news.fields.content,
+                    widget.news.fields.content,
                     style: TextStyle(
                       color: Colors.grey[300],
                       fontSize: 16,
@@ -78,19 +97,15 @@ class NewsDetailPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: ForumEntryCard(
               key: forumKey,
-              articleId: news.pk,
+              articleId: widget.news.pk,
               cardBg: _cardBg,
               accentBlue: _accentBlue,
               textPrimary: _textPrimary,
-            ),
-          ),
 
-          // 4. FORM TAMBAH KOMENTAR
-          SliverToBoxAdapter(
-            child: ForumForm(
-              articleId: news.pk,
-              onSuccess: () {
-                forumKey.currentState?.refresh();
+              onLoaded: () {
+                if (widget.scrollToForum) {
+                  forumKey.currentState?.scrollToForum();
+                }
               },
             ),
           ),
@@ -102,8 +117,8 @@ class NewsDetailPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Share.share(
-            "Baca berita menarik di Sporra!\n\n${news.fields.title}\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
-            subject: news.fields.title,
+            "Baca berita menarik di Sporra!\n\n${widget.news.fields.title}\nhttps://afero-aqil-sporra.pbp.cs.ui.ac.id/news/",
+            subject: widget.news.fields.title,
           );
         },
         backgroundColor: _accentBlue,
@@ -116,14 +131,12 @@ class NewsDetailPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
         color: _accentBlue.withOpacity(0.2),
         borderRadius: BorderRadius.circular(20),
-        // ignore: deprecated_member_use
         border: Border.all(color: _accentBlue.withOpacity(0.5)),
       ),
       child: Text(
-        news.fields.category.toUpperCase(),
+        widget.news.fields.category.toUpperCase(),
         style: TextStyle(
           color: _accentBlue,
           fontWeight: FontWeight.bold,
@@ -140,13 +153,13 @@ class NewsDetailPage extends StatelessWidget {
         CircleAvatar(
           radius: 24,
           backgroundColor: _accentBlue,
-          backgroundImage: (news.fields.authorPfp.isNotEmpty)
-              ? NetworkImage(news.fields.authorPfp)
+          backgroundImage: (widget.news.fields.authorPfp.isNotEmpty)
+              ? NetworkImage(widget.news.fields.authorPfp)
               : null,
-          child: (news.fields.authorPfp.isEmpty)
+          child: (widget.news.fields.authorPfp.isEmpty)
               ? Text(
-                  news.fields.author.isNotEmpty
-                      ? news.fields.author[0].toUpperCase()
+                widget.news.fields.author.isNotEmpty
+                      ? widget.news.fields.author[0].toUpperCase()
                       : "A",
                   style: const TextStyle(
                     color: Colors.white,
@@ -161,7 +174,7 @@ class NewsDetailPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              news.fields.author,
+              widget.news.fields.author,
               style: TextStyle(
                 color: _textPrimary,
                 fontWeight: FontWeight.bold,
@@ -195,9 +208,9 @@ class NewsDetailPage extends StatelessWidget {
         background: Stack(
           fit: StackFit.expand,
           children: [
-            news.fields.thumbnail.isNotEmpty
+            widget.news.fields.thumbnail.isNotEmpty
                 ? Image.network(
-                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(news.fields.thumbnail)}',
+                    'https://afero-aqil-sporra.pbp.cs.ui.ac.id/news/proxy-image/?url=${Uri.encodeComponent(widget.news.fields.thumbnail)}',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: Colors.grey[900],

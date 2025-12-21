@@ -129,7 +129,7 @@ class _EventEditPageState extends State<EventEditPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text("Acara berhasil diperbarui!"),
+        content: Text("Event successfully updated!"),
         backgroundColor: Colors.green,
       ),
     );
@@ -147,7 +147,6 @@ class _EventEditPageState extends State<EventEditPage> {
         title: const Text("Edit Event"),
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
-        // TOMBOL BACK CUSTOM (Lingkaran)
         leading: IconButton(
           icon: const CircleAvatar(
             backgroundColor: Colors.black54,
@@ -158,6 +157,9 @@ class _EventEditPageState extends State<EventEditPage> {
       ),
       body: Center(
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
           padding: const EdgeInsets.all(20),
           child: Card(
             elevation: 12,
@@ -172,28 +174,37 @@ class _EventEditPageState extends State<EventEditPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const Text(
+                      "Details",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     _buildInputField(
-                      label: "Judul",
+                      label: "Title",
                       initialValue: _judul,
                       onSaved: (v) => _judul = v!,
                     ),
                     const SizedBox(height: 20),
                     _buildInputField(
-                      label: "Deskripsi",
+                      label: "Description",
                       initialValue: _deskripsi,
                       maxLines: 4,
                       onSaved: (v) => _deskripsi = v!,
                     ),
                     const SizedBox(height: 20),
                     _buildInputField(
-                      label: "Lokasi",
+                      label: "Location",
                       initialValue: _lokasi,
                       onSaved: (v) => _lokasi = v!,
                     ),
                     const SizedBox(height: 20),
 
                     Text(
-                      "Kategori",
+                      "Category",
                       style: TextStyle(color: Color(0xFFD1D5DB), fontSize: 16),
                     ),
                     const SizedBox(height: 8),
@@ -227,7 +238,7 @@ class _EventEditPageState extends State<EventEditPage> {
                     const SizedBox(height: 20),
 
                     Text(
-                      "Tanggal & Waktu",
+                      "Date & Time",
                       style: TextStyle(color: Color(0xFFD1D5DB), fontSize: 16),
                     ),
                     const SizedBox(height: 8),
@@ -265,7 +276,7 @@ class _EventEditPageState extends State<EventEditPage> {
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
                         child: const Text(
-                          "Simpan Perubahan",
+                          "Save Changes",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -307,8 +318,7 @@ class _EventEditPageState extends State<EventEditPage> {
             fillColor: const Color(0xFF374151),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          validator: (v) =>
-              v == null || v.isEmpty ? "Tidak boleh kosong" : null,
+          validator: (v) => v == null || v.isEmpty ? "Required" : null,
           onSaved: onSaved,
         ),
       ],

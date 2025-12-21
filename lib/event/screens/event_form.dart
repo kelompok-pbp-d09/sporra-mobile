@@ -68,7 +68,6 @@ class _EventFormPageState extends State<EventFormPage> {
       ),
     );
     if (pickedDate != null) {
-      // ignore: use_build_context_synchronously
       TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
@@ -107,9 +106,9 @@ class _EventFormPageState extends State<EventFormPage> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Acara berhasil dibuat!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Event successfully created!")),
+      );
       Navigator.pop(context, true);
     }
   }
@@ -125,7 +124,6 @@ class _EventFormPageState extends State<EventFormPage> {
         backgroundColor: const Color(0xFF1F2937),
         foregroundColor: Colors.white,
         elevation: 0,
-        // TOMBOL BACK CUSTOM (Lingkaran)
         leading: IconButton(
           icon: const CircleAvatar(
             backgroundColor: Colors.black54,
@@ -135,11 +133,13 @@ class _EventFormPageState extends State<EventFormPage> {
         ),
       ),
       body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // HAPUS TOMBOL "KEMBALI" MANUAL DI SINI
             Card(
               elevation: 12,
               color: const Color(0xFF1F2937),
@@ -164,24 +164,24 @@ class _EventFormPageState extends State<EventFormPage> {
                       const SizedBox(height: 20),
 
                       _buildInputField(
-                        label: "Judul",
+                        label: "Title",
                         onSaved: (v) => _judul = v!,
                       ),
                       const SizedBox(height: 20),
                       _buildInputField(
-                        label: "Deskripsi",
+                        label: "Description",
                         maxLines: 3,
                         onSaved: (v) => _deskripsi = v!,
                       ),
                       const SizedBox(height: 20),
                       _buildInputField(
-                        label: "Lokasi",
+                        label: "Location",
                         onSaved: (v) => _lokasi = v!,
                       ),
 
                       const SizedBox(height: 20),
                       const Text(
-                        "Kategori",
+                        "Category",
                         style: TextStyle(
                           color: Color(0xFFD1D5DB),
                           fontSize: 16,
@@ -220,7 +220,7 @@ class _EventFormPageState extends State<EventFormPage> {
 
                       const SizedBox(height: 20),
                       const Text(
-                        "Waktu",
+                        "Date & Time",
                         style: TextStyle(
                           color: Color(0xFFD1D5DB),
                           fontSize: 16,
@@ -237,7 +237,7 @@ class _EventFormPageState extends State<EventFormPage> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            _date.isEmpty ? "Pilih Tanggal & Jam" : _date,
+                            _date.isEmpty ? "Choose Date & Time" : _date,
                             style: const TextStyle(color: Colors.white),
                           ),
                         ),
@@ -258,7 +258,7 @@ class _EventFormPageState extends State<EventFormPage> {
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           child: const Text(
-                            "Simpan",
+                            "Save Event",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
